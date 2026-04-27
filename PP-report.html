@@ -1,0 +1,2519 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LITGRID AB - Pirkimo pažymos rengimo įrankis</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f4f6f9;
+    color: #1f2937;
+    line-height: 1.5;
+  }
+  header {
+    background: linear-gradient(135deg, #003a70 0%, #0066b3 100%);
+    color: white;
+    padding: 18px 32px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  header .logo-mark {
+    background: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+  }
+  header .logo-mark img { height: 24px; }
+  header .subtitle {
+    font-size: 13px;
+    opacity: 0.85;
+    margin-top: 4px;
+    font-weight: 400;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 32px 80px;
+  }
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    background: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
+    position: sticky;
+    top: 70px;
+    z-index: 50;
+  }
+  .toolbar button {
+    padding: 8px 14px;
+    border: 1px solid #d1d5db;
+    background: white;
+    color: #374151;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .toolbar button:hover { background: #f3f4f6; border-color: #9ca3af; }
+  .toolbar button.primary {
+    background: #003a70;
+    color: white;
+    border-color: #003a70;
+  }
+  .toolbar button.primary:hover { background: #002850; }
+  .toolbar button.success {
+    background: #059669;
+    color: white;
+    border-color: #059669;
+  }
+  .toolbar button.success:hover { background: #047857; }
+  .toolbar .spacer { flex: 1; }
+  .toolbar .draft-info {
+    font-size: 12px;
+    color: #6b7280;
+    align-self: center;
+    padding: 0 8px;
+  }
+
+  /* Form selector screen */
+  .selector {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    text-align: center;
+  }
+  .selector h2 {
+    margin: 0 0 8px;
+    color: #003a70;
+    font-size: 24px;
+  }
+  .selector p {
+    color: #6b7280;
+    margin: 0 0 32px;
+  }
+  .form-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .form-card {
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+    text-align: left;
+  }
+  .form-card:hover {
+    border-color: #0066b3;
+    box-shadow: 0 4px 12px rgba(0,102,179,0.12);
+    transform: translateY(-2px);
+  }
+  .form-card .badge {
+    display: inline-block;
+    background: #eff6ff;
+    color: #1e40af;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .form-card h3 {
+    margin: 0 0 8px;
+    color: #003a70;
+    font-size: 18px;
+  }
+  .form-card .range {
+    font-size: 14px;
+    color: #1f2937;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .form-card .desc {
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.5;
+  }
+
+  /* Form sections */
+  .section {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .section-header {
+    padding: 14px 20px;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+  }
+  .section-header h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #003a70;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-header .num {
+    background: #003a70;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .section-header .toggle {
+    color: #9ca3af;
+    transition: transform 0.2s;
+  }
+  .section.collapsed .section-header .toggle { transform: rotate(-90deg); }
+  .section.collapsed .section-body { display: none; }
+  .section-body { padding: 20px; }
+
+  /* Form fields */
+  .field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .field-grid.three { grid-template-columns: repeat(3, 1fr); }
+  .field-grid.full { grid-template-columns: 1fr; }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .field.full-row { grid-column: 1 / -1; }
+  .field label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #374151;
+  }
+  .field label .req { color: #dc2626; }
+  .field .hint {
+    font-size: 11px;
+    color: #6b7280;
+    font-style: italic;
+  }
+  .field input[type="text"],
+  .field input[type="number"],
+  .field input[type="date"],
+  .field select,
+  .field textarea {
+    padding: 8px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    transition: border-color 0.15s;
+    background: white;
+  }
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    outline: none;
+    border-color: #0066b3;
+    box-shadow: 0 0 0 3px rgba(0,102,179,0.1);
+  }
+  .field textarea { resize: vertical; min-height: 70px; }
+  .field input.invalid { border-color: #dc2626; background: #fef2f2; }
+
+  .checkbox-group, .radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 0;
+  }
+  .checkbox-group.inline, .radio-group.inline {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .checkbox-group label, .radio-group label {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: normal;
+  }
+  .checkbox-group input, .radio-group input { margin-top: 2px; }
+
+  /* Tables */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 12px;
+  }
+  .data-table th, .data-table td {
+    border: 1px solid #d1d5db;
+    padding: 6px 8px;
+    text-align: left;
+    vertical-align: top;
+  }
+  .data-table th {
+    background: #f3f4f6;
+    font-weight: 600;
+    font-size: 11px;
+  }
+  .data-table input, .data-table select, .data-table textarea {
+    width: 100%;
+    border: 1px solid transparent;
+    padding: 4px 6px;
+    font-size: 12px;
+    background: transparent;
+    border-radius: 4px;
+  }
+  .data-table input:focus, .data-table select:focus, .data-table textarea:focus {
+    outline: none;
+    border-color: #0066b3;
+    background: white;
+  }
+  .data-table textarea { resize: vertical; min-height: 40px; }
+  .table-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .btn-small {
+    padding: 4px 10px;
+    border: 1px solid #d1d5db;
+    background: white;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #374151;
+  }
+  .btn-small:hover { background: #f3f4f6; }
+  .btn-remove {
+    color: #dc2626;
+    background: white;
+    border: 1px solid #fca5a5;
+  }
+  .btn-remove:hover { background: #fef2f2; }
+
+  /* Helper text and warnings */
+  .helper-box {
+    background: #fffbeb;
+    border-left: 3px solid #f59e0b;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #78350f;
+    margin-bottom: 12px;
+  }
+  .helper-box.info {
+    background: #eff6ff;
+    border-color: #3b82f6;
+    color: #1e3a8a;
+  }
+  .helper-box.error {
+    background: #fef2f2;
+    border-color: #dc2626;
+    color: #7f1d1d;
+  }
+  .helper-box strong { display: block; margin-bottom: 4px; }
+
+  /* Conditional rows */
+  .conditional { display: none; }
+  .conditional.show { display: block; }
+
+  /* Modal / preview */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-backdrop.show { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 10px;
+    max-width: 900px;
+    width: 100%;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  }
+  .modal-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-header h3 { margin: 0; color: #003a70; }
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #6b7280;
+  }
+  .modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  /* Preview document styling */
+  .preview-doc {
+    background: white;
+    padding: 30px 40px;
+    border: 1px solid #e5e7eb;
+    font-family: 'Times New Roman', serif;
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+  .preview-doc h1 {
+    text-align: center;
+    font-size: 12pt;
+    text-transform: uppercase;
+    margin: 0 0 4px;
+  }
+  .preview-doc .doc-meta {
+    text-align: center;
+    margin-bottom: 16px;
+    font-size: 11pt;
+  }
+  .preview-doc table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 8px;
+    font-size: 10pt;
+  }
+  .preview-doc table td, .preview-doc table th {
+    border: 1px solid #000;
+    padding: 4px 6px;
+    vertical-align: top;
+  }
+  .preview-doc .section-title {
+    background: #f3f4f6;
+    font-weight: bold;
+    text-transform: uppercase;
+    padding: 4px 6px;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: #1f2937;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    font-size: 13px;
+    z-index: 300;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { background: #059669; }
+  .toast.error { background: #dc2626; }
+
+  /* Loaders, drafts dropdown */
+  .drafts-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  .drafts-list li {
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .drafts-list .meta {
+    flex: 1;
+    min-width: 0;
+  }
+  .drafts-list .name {
+    font-weight: 600;
+    font-size: 13px;
+    color: #1f2937;
+    margin-bottom: 2px;
+  }
+  .drafts-list .info {
+    font-size: 11px;
+    color: #6b7280;
+  }
+  .drafts-list .actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  /* Print styles */
+  @media print {
+    header, .toolbar, .form-selector, button { display: none !important; }
+    .container { max-width: 100%; padding: 0; }
+    .section { box-shadow: none; }
+  }
+
+  @media (max-width: 720px) {
+    .field-grid, .field-grid.three { grid-template-columns: 1fr; }
+    .form-cards { grid-template-columns: 1fr; }
+    header, .container { padding-left: 16px; padding-right: 16px; }
+  }
+
+  .small-note {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 4px;
+  }
+  .text-italic { font-style: italic; color: #6b7280; }
+
+  .add-row-btn {
+    padding: 6px 12px;
+    border: 1px dashed #9ca3af;
+    background: #f9fafb;
+    color: #374151;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    width: 100%;
+    margin-top: 8px;
+  }
+  .add-row-btn:hover { background: #f3f4f6; border-color: #6b7280; }
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex; align-items:center; gap:16px;">
+    <span class="logo-mark"><img id="header-logo-img" alt="Litgrid"></span>
+    <div>
+      <h1>LITGRID AB &middot; Pirkimo pažymos rengimo įrankis</h1>
+      <div class="subtitle">Mažos vertės pirkimų tiekėjų apklausos pažymos generavimas (Aprašo 1 ir 2 priedai)</div>
+    </div>
+  </div>
+</header>
+<script>
+  // Set logo source after page renders (LITGRID_LOGO_BASE64 defined later in main script)
+  window.addEventListener('DOMContentLoaded', function() {
+    var img = document.getElementById('header-logo-img');
+    if (img && typeof LITGRID_LOGO_BASE64 !== 'undefined') {
+      img.src = 'data:image/png;base64,' + LITGRID_LOGO_BASE64;
+    }
+  });
+</script>
+
+<div class="container">
+
+  <!-- FORM SELECTOR -->
+  <div id="form-selector" class="selector">
+    <h2>Pasirinkite pirkimo pažymos formą</h2>
+    <p>Forma parenkama pagal numatomą pirkimo vertę be PVM</p>
+    <div class="form-cards">
+      <div class="form-card" onclick="selectForm(1)">
+        <div class="badge">1 priedas</div>
+        <h3>Iniciatorių pažyma</h3>
+        <div class="range">5 000 - 15 000 Eur be PVM</div>
+        <div class="desc">
+          Pildo patys pirkimo iniciatoriai. Tvirtina pirkimo grupės vadovai. Naudojama mažesnės apimties pirkimams (žodžiu arba el. paštu).
+        </div>
+      </div>
+      <div class="form-card" onclick="selectForm(2)">
+        <div class="badge">2 priedas</div>
+        <h3>Organizatorių pažyma</h3>
+        <div class="range">virš 15 000 Eur be PVM</div>
+        <div class="desc">
+          Pildo pirkimų skyriaus organizatoriai. Tvirtina pirkimo grupės vadovai. Naudojama didesniems pirkimams su CVP IS bei galimomis derybomis.
+        </div>
+      </div>
+    </div>
+    <p style="margin-top: 24px; font-size: 12px; color: #9ca3af;">
+      Iki 5 000 Eur be PVM pirkimo pažymos nerengiamos.
+    </p>
+  </div>
+
+  <!-- TOOLBAR (hidden until form selected) -->
+  <div id="toolbar" class="toolbar" style="display:none;">
+    <button onclick="goBackToSelector()" title="Grįžti į formos pasirinkimą">&larr; Pakeisti formą</button>
+    <button onclick="saveDraft()" title="Išsaugoti juodraštį naršyklės atmintyje">💾 Išsaugoti juodraštį</button>
+    <button onclick="openDraftsList()" title="Atverti išsaugotus juodraščius">📂 Juodraščiai</button>
+    <button onclick="resetForm()" title="Išvalyti formą">🔄 Išvalyti</button>
+    <span class="spacer"></span>
+    <span id="draft-info" class="draft-info"></span>
+    <button onclick="showPreview()">👁️ Peržiūrėti</button>
+    <button class="success" onclick="generateDocx()">📄 Generuoti Word</button>
+  </div>
+
+  <!-- FORM CONTAINER -->
+  <div id="form-container" style="display:none;"></div>
+
+</div>
+
+<!-- DRAFTS MODAL -->
+<div id="drafts-modal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Išsaugoti juodraščiai</h3>
+      <button class="modal-close" onclick="closeModal('drafts-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <ul id="drafts-list" class="drafts-list"></ul>
+      <p id="drafts-empty" style="text-align:center; color:#9ca3af; padding:20px;">Nėra išsaugotų juodraščių</p>
+    </div>
+  </div>
+</div>
+
+<!-- PREVIEW MODAL -->
+<div id="preview-modal" class="modal-backdrop">
+  <div class="modal" style="max-width: 1000px;">
+    <div class="modal-header">
+      <h3>Pažymos peržiūra</h3>
+      <button class="modal-close" onclick="closeModal('preview-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="preview-content"></div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeModal('preview-modal')">Uždaryti</button>
+      <button class="success" onclick="generateDocx()">Generuoti Word</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<!-- DOCX library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+<script>
+// ============================================================
+// LITGRID AB - Pirkimo pažymos generavimo įrankis
+// ============================================================
+
+// Litgrid logotipas (base64 PNG) - naudojamas Word dokumento header
+const LITGRID_LOGO_BASE64 = "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";
+
+// Aprašo 29 punkto pagrindai (neskelbiamai apklausai)
+const APRASO_29_PUNKTAI = [
+  { value: '29.1', label: '29.1 - sutarties vertė neviršija 15 000 Eur be PVM' },
+  { value: '29.2', label: '29.2 - skelbtame pirkime nebuvo gauta pasiūlymų / visi netinkami' },
+  { value: '29.3', label: '29.3 - skelbtame pirkime visi pasiūlymai nepriimtini' },
+  { value: '29.4', label: '29.4 - ypatinga skuba dėl nenumatytų aplinkybių' },
+  { value: '29.5.1', label: '29.5.1 - unikalus meno kūrinys ar meninis atlikimas' },
+  { value: '29.5.2', label: '29.5.2 - konkurencijos nėra dėl techninių priežasčių' },
+  { value: '29.5.3', label: '29.5.3 - dėl išimtinių (intelektinės nuosavybės) teisių apsaugos' },
+  { value: '29.6', label: '29.6 - moksliniai tyrimai, eksperimentai, studijos' },
+  { value: '29.7', label: '29.7 - papildomi pirkimai iš to paties tiekėjo (suderinamumas)' },
+  { value: '29.8', label: '29.8 - prekės kotiruojamos ir perkamos prekių biržoje' },
+  { value: '29.9', label: '29.9 - ypač palankios sąlygos (likvidavimas, bankrotas)' },
+  { value: '29.10', label: '29.10 - naujos panašios paslaugos / darbai iš to paties tiekėjo' },
+  { value: '29.11', label: '29.11 - muziejų eksponatai, archyvų dokumentai, leidiniai' },
+  { value: '29.12', label: '29.12 - reprezentacinėms reikmėms' },
+  { value: '29.13', label: '29.13 - prekės iš valstybės rezervo' },
+  { value: '29.14', label: '29.14 - bibliotekinių dokumentų / duomenų bazių licencijos' },
+  { value: '29.15', label: '29.15 - darbuotojų mokymo, konferencijų paslaugos' },
+  { value: '29.16', label: '29.16 - ekspertų komisijų / komitetų / tarybų narių paslaugos' },
+  { value: '29.17', label: '29.17 - mokslo / studijų institucijų ekspertinis vertinimas' },
+  { value: '29.18', label: '29.18 - prekės moksliniams tyrimams ir plėtrai' },
+  { value: '29.19', label: '29.19 - valstybės iždo finansinės paslaugos' },
+  { value: '29.20', label: '29.20 - tarnybinių komandiruočių paslaugos' },
+  { value: '29.21', label: '29.21 - dalijimosi platformų paslaugos' },
+  { value: '29.22', label: '29.22 - dalyvavimo parodose paslaugos' },
+  { value: '29.23', label: '29.23 - maisto produktai iš trumposios tiekimo grandinės' },
+  { value: '29.24', label: '29.24 - kiti Įstatyme numatyti atvejai' }
+];
+
+// Pirkimo būdai
+const PIRKIMO_BUDAI_F1 = [
+  { value: '', label: '-- Pasirinkite --' },
+  { value: 'Neskelbiama apklausa žodžiu', label: 'Neskelbiama apklausa žodžiu' },
+  { value: 'Neskelbiama apklausa raštu', label: 'Neskelbiama apklausa raštu (el. paštu)' }
+];
+
+const PIRKIMO_BUDAI_F2 = [
+  { value: '', label: '-- Pasirinkite --' },
+  { value: 'Skelbiama apklausa', label: 'Skelbiama apklausa (CVP IS)' },
+  { value: 'Neskelbiama apklausa raštu', label: 'Neskelbiama apklausa raštu (CVP IS / el. paštu)' }
+];
+
+// Vertinimo kriterijai
+const VERTINIMO_KRITERIJAI = [
+  { value: '', label: '-- Pasirinkite --' },
+  { value: 'Kaina', label: 'Kaina' },
+  { value: 'Sąnaudos pagal gyvavimo ciklo metodą', label: 'Sąnaudos pagal gyvavimo ciklo metodą' },
+  { value: 'Kainos ar sąnaudų ir kokybės santykis', label: 'Kainos ar sąnaudų ir kokybės santykis' }
+];
+
+// Tvirtintojai
+const TVIRTINTOJAI = [
+  { value: '', label: '-- Pasirinkite --' },
+  { value: 'Technologinių pirkimų grupės vadovė', label: 'Technologinių pirkimų grupės vadovė' },
+  { value: 'Veiklos palaikymo grupės vadovė', label: 'Veiklos palaikymo grupės vadovė' }
+];
+
+// Lietuviški mėnesių pavadinimai (kilmininkas)
+const MENESIAI = ['sausio', 'vasario', 'kovo', 'balandžio', 'gegužės', 'birželio',
+                  'liepos', 'rugpjūčio', 'rugsėjo', 'spalio', 'lapkričio', 'gruodžio'];
+
+// Globalūs kintamieji
+let currentForm = null; // 1 arba 2
+let currentDraftId = null;
+let formData = {};
+
+// ============================================================
+// FORM SELECTION
+// ============================================================
+function selectForm(formNum) {
+  currentForm = formNum;
+  document.getElementById('form-selector').style.display = 'none';
+  document.getElementById('toolbar').style.display = 'flex';
+  document.getElementById('form-container').style.display = 'block';
+  renderForm(formNum);
+  // Scroll to top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goBackToSelector() {
+  if (!confirm('Ar tikrai norite grįžti į formos pasirinkimą? Neišsaugoti pakeitimai bus prarasti.')) return;
+  currentForm = null;
+  currentDraftId = null;
+  formData = {};
+  document.getElementById('form-selector').style.display = 'block';
+  document.getElementById('toolbar').style.display = 'none';
+  document.getElementById('form-container').style.display = 'none';
+  document.getElementById('form-container').innerHTML = '';
+  document.getElementById('draft-info').textContent = '';
+}
+
+// ============================================================
+// FORM RENDERING
+// ============================================================
+function renderForm(formNum) {
+  const container = document.getElementById('form-container');
+  container.innerHTML = formNum === 1 ? renderForm1() : renderForm2();
+  attachEventHandlers();
+  // Init defaults
+  initDefaults();
+  // Today's date as default
+  setTodayDate();
+}
+
+function setTodayDate() {
+  const today = new Date();
+  const dateField = document.getElementById('doc-date');
+  if (dateField && !dateField.value) {
+    dateField.value = today.toISOString().split('T')[0];
+  }
+}
+
+function initDefaults() {
+  // Set default radios where applicable
+  const tableRows = document.querySelectorAll('.supplier-row');
+  tableRows.forEach(row => {
+    // Nothing yet
+  });
+}
+
+// Common section: 1 - Pirkimo objektas
+function renderSection1(formNum) {
+  const formTwoExtras = formNum === 2 ? `
+    <div class="field">
+      <label>Pirkimo kortelės registravimo data</label>
+      <input type="date" id="kortele-data" data-field="korteleData">
+    </div>
+    <div class="field">
+      <label>Pirkimo kortelės numeris</label>
+      <input type="text" id="kortele-nr" data-field="korteleNr" placeholder="Pvz., PR-2026-001">
+    </div>
+  ` : '';
+
+  const splitOption = formNum === 2 ? `
+    <div class="field full-row">
+      <label>Pirkimo objekto skaidymas</label>
+      <div class="radio-group inline">
+        <label><input type="radio" name="skaidoma" value="ne" checked onchange="toggleSkaidymas(this)"> Neskaidomas į dalis</label>
+        <label><input type="radio" name="skaidoma" value="taip" onchange="toggleSkaidymas(this)"> Skaidomas į dalis</label>
+      </div>
+      <div id="dalys-container" class="conditional">
+        <div class="small-note">Įveskite kiekvieną dalį atskirai:</div>
+        <table class="data-table" id="dalys-table">
+          <thead>
+            <tr><th style="width:40px;">Nr.</th><th>Dalies pavadinimas</th><th style="width:140px;">Vertė be PVM (Eur)</th><th style="width:140px;">Vertė su PVM (Eur)</th><th style="width:60px;"></th></tr>
+          </thead>
+          <tbody id="dalys-tbody"></tbody>
+        </table>
+        <button type="button" class="add-row-btn" onclick="addDalis()">+ Pridėti dalį</button>
+      </div>
+    </div>
+  ` : `
+    <div class="field full-row">
+      <div class="small-note">Pirkimo objektas neskaidomas į dalis (numatyta 1 priede pagal nutylėjimą).</div>
+    </div>
+  `;
+
+  return `
+    <div class="section" data-section="1">
+      <div class="section-header" onclick="toggleSection(this)">
+        <h3><span class="num">1</span> Informacija apie pirkimo objektą</h3>
+        <span class="toggle">▼</span>
+      </div>
+      <div class="section-body">
+        <div class="field-grid">
+          <div class="field full-row">
+            <label>Pirkimo pavadinimas <span class="req">*</span></label>
+            <input type="text" id="pirkimo-pavadinimas" data-field="pirkimoPavadinimas" placeholder="Pvz., Programinės įrangos licencijų atnaujinimo paslaugos">
+          </div>
+          ${formTwoExtras}
+          <div class="field">
+            <label>Numatoma vertė be PVM (Eur) <span class="req">*</span></label>
+            <input type="number" id="verte-be-pvm" data-field="verteBePvm" step="0.01" placeholder="0.00" oninput="validateValue()">
+            <div id="value-warning" class="hint" style="color:#dc2626; display:none;"></div>
+          </div>
+          <div class="field">
+            <label>Numatoma vertė su PVM (Eur) <span class="req">*</span></label>
+            <input type="number" id="verte-su-pvm" data-field="verteSuPvm" step="0.01" placeholder="0.00">
+          </div>
+          ${splitOption}
+          <div class="field full-row">
+            <div class="small-note">Pirkimo objektas nėra įtrauktas į CPO katalogą (jei netinka, pakeiskite Kitoje informacijoje).</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Section 2 - Iniciatorius/Organizatorius
+function renderSection2(formNum) {
+  if (formNum === 2) {
+    return `
+      <div class="section" data-section="2">
+        <div class="section-header" onclick="toggleSection(this)">
+          <h3><span class="num">2</span> Pirkimo iniciatorius / organizatorius</h3>
+          <span class="toggle">▼</span>
+        </div>
+        <div class="section-body">
+          <div class="helper-box">
+            <strong>Priminimas:</strong>
+            Patikrinti ar pirkimo iniciatorius / organizatorius yra tinkamai deklaravęs interesus ir pasirašęs konfidencialumo pasižadėjimą.
+          </div>
+          <div class="field-grid">
+            <div class="field">
+              <label>Iniciatoriaus padalinys</label>
+              <input type="text" id="ini-padalinys" data-field="iniPadalinys" placeholder="Pvz., IT skyrius">
+            </div>
+            <div class="field">
+              <label>Iniciatoriaus pareigos</label>
+              <input type="text" id="ini-pareigos" data-field="iniPareigos" placeholder="Pvz., Vyresnysis specialistas">
+            </div>
+            <div class="field">
+              <label>Iniciatoriaus vardas, pavardė</label>
+              <input type="text" id="ini-vardas" data-field="iniVardas" placeholder="Pvz., Jonas Jonaitis">
+            </div>
+            <div class="field"></div>
+            <div class="field">
+              <label>Organizatoriaus pareigos</label>
+              <input type="text" id="org-pareigos" data-field="orgPareigos" placeholder="Pvz., Pirkimų vadovas">
+            </div>
+            <div class="field">
+              <label>Organizatoriaus vardas, pavardė</label>
+              <input type="text" id="org-vardas" data-field="orgVardas" placeholder="Pvz., Petras Petraitis">
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  return `
+    <div class="section" data-section="2">
+      <div class="section-header" onclick="toggleSection(this)">
+        <h3><span class="num">2</span> Pirkimo iniciatorius / organizatorius</h3>
+        <span class="toggle">▼</span>
+      </div>
+      <div class="section-body">
+        <div class="helper-box">
+          <strong>Priminimas:</strong>
+          Patikrinti ar pirkimo iniciatorius / organizatorius yra tinkamai deklaravęs interesus ir pasirašęs konfidencialumo pasižadėjimą.
+        </div>
+        <div class="field-grid">
+          <div class="field">
+            <label>Padalinys</label>
+            <input type="text" id="ini-padalinys" data-field="iniPadalinys" placeholder="Pvz., IT skyrius">
+          </div>
+          <div class="field">
+            <label>Pareigos</label>
+            <input type="text" id="ini-pareigos" data-field="iniPareigos" placeholder="Pvz., Vyresnysis specialistas">
+          </div>
+          <div class="field full-row">
+            <label>Vardas, pavardė</label>
+            <input type="text" id="ini-vardas" data-field="iniVardas" placeholder="Pvz., Jonas Jonaitis">
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Section 3 - Procedūrų reglamentavimas
+function renderSection3(formNum) {
+  const budai = formNum === 1 ? PIRKIMO_BUDAI_F1 : PIRKIMO_BUDAI_F2;
+  const budaiOptions = budai.map(b => `<option value="${b.value}">${b.label}</option>`).join('');
+  const kriterijaiOptions = VERTINIMO_KRITERIJAI.map(k => `<option value="${k.value}">${k.label}</option>`).join('');
+
+  const atliekamasOptions = formNum === 1 ? `
+    <div class="radio-group inline">
+      <label><input type="radio" name="atliekamas" value="El. paštu"> El. paštu</label>
+      <label><input type="radio" name="atliekamas" value="Žodžiu"> Žodžiu</label>
+    </div>
+  ` : `
+    <div class="radio-group inline">
+      <label><input type="radio" name="atliekamas" value="CVP IS" onchange="toggleCvpIs(this)"> CVP IS priemonėmis</label>
+      <label><input type="radio" name="atliekamas" value="El. paštu" onchange="toggleCvpIs(this)"> El. paštu</label>
+    </div>
+    <div id="cvpis-nr-container" class="conditional" style="margin-top:8px;">
+      <input type="text" id="cvpis-nr" data-field="cvpisNr" placeholder="CVP IS Nr.">
+    </div>
+  `;
+
+  return `
+    <div class="section" data-section="3">
+      <div class="section-header" onclick="toggleSection(this)">
+        <h3><span class="num">3</span> Pirkimo procedūrų reglamentavimas</h3>
+        <span class="toggle">▼</span>
+      </div>
+      <div class="section-body">
+        <div class="field-grid">
+          <div class="field">
+            <label>Pirkimo būdas <span class="req">*</span></label>
+            <select id="pirkimo-budas" data-field="pirkimoBudas" onchange="onBudasChange()">
+              ${budaiOptions}
+            </select>
+          </div>
+          <div class="field">
+            <label>Vertinimo kriterijus <span class="req">*</span></label>
+            <select id="vertinimo-kriterijus" data-field="vertinimoKriterijus">
+              ${kriterijaiOptions}
+            </select>
+            ${formNum === 1 ? '<div class="hint">1 priede pagal nutylėjimą - kaina</div>' : ''}
+          </div>
+          <div class="field">
+            <label>Derybos</label>
+            <div class="radio-group inline">
+              <label><input type="radio" name="derybos" value="Vykdomos" onchange="toggleDerybos(this)"> Vykdomos</label>
+              <label><input type="radio" name="derybos" value="Nevykdomos" checked onchange="toggleDerybos(this)"> Nevykdomos</label>
+            </div>
+          </div>
+          <div class="field">
+            <label>Pirkimas atliekamas</label>
+            ${atliekamasOptions}
+          </div>
+          <div class="field full-row">
+            <label>Pašalinimo pagrindų ir kvalifikacijos reikalavimai</label>
+            <div class="checkbox-group">
+              <label><input type="checkbox" data-field="pasalKvalNetikrinama"> Tiekėjų pašalinimo pagrindų nebuvimas ir kvalifikacija nėra tikrinama</label>
+              <label><input type="checkbox" data-field="pasalTikrinamas"> Tiekėjų pašalinimo pagrindų nebuvimas yra tikrinamas</label>
+              <label><input type="checkbox" data-field="kvalTikrinama"> Tiekėjų kvalifikacija yra tikrinama</label>
+              <label><input type="checkbox" data-field="kvalNetikrinama"> Tiekėjų kvalifikacija nėra tikrinama</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Section 4 - Procedūrų eiga
+function renderSection4(formNum) {
+  const apraso29Options = APRASO_29_PUNKTAI.map(p => `<option value="${p.value}">${p.label}</option>`).join('');
+
+  const derybUI = formNum === 2 ? `
+    <div id="derybos-section" class="conditional" style="margin-top:16px;">
+      <h4 style="font-size:13px; margin:16px 0 8px; color:#003a70;">Derybų informacija</h4>
+      <div class="field full-row">
+        <label>Derybos vykdytos</label>
+        <div class="checkbox-group inline">
+          <label><input type="checkbox" data-field="derybCvpis"> CVP IS priemonėmis</label>
+          <label><input type="checkbox" data-field="derybSusitik"> Susitikimuose</label>
+          <label><input type="checkbox" data-field="derybKonf"> Konferencijos telefonu/internetu</label>
+          <label><input type="checkbox" data-field="derybElpas"> El. paštu</label>
+        </div>
+      </div>
+      <h5 style="font-size:12px; margin:12px 0 6px;">2 lentelė. Galutiniai pasiūlymai</h5>
+      <table class="data-table" id="galutiniai-table">
+        <thead>
+          <tr>
+            <th style="width:40px;">Nr.</th>
+            <th>Tiekėjo pavadinimas</th>
+            <th style="width:140px;">Galutinė kaina be PVM</th>
+            <th style="width:140px;">Galutinė kaina su PVM</th>
+            <th style="width:90px;">Vertinimas</th>
+            <th>Neatitikimas</th>
+            <th style="width:60px;"></th>
+          </tr>
+        </thead>
+        <tbody id="galutiniai-tbody"></tbody>
+      </table>
+      <button type="button" class="add-row-btn" onclick="addGalutinisRow()">+ Pridėti galutinį pasiūlymą</button>
+    </div>
+
+    <h4 style="font-size:13px; margin:20px 0 8px; color:#003a70;">Galimo laimėtojo kvalifikacijos vertinimas</h4>
+    <div class="field full-row">
+      <label>Galimas laimėtojas</label>
+      <input type="text" id="galimas-laimetojas" data-field="galimasLaimetojas" placeholder="Tiekėjo pavadinimas">
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Pavadinimas</th>
+          <th style="width:120px;">Kvalifikacija</th>
+          <th style="width:120px;">Kiti reikalavimai</th>
+          <th>Pastabos</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><input type="text" id="kvalif-tiekejas" data-field="kvalifTiekejas" placeholder="Tiekėjas"></td>
+          <td>
+            <select id="kvalif-vertinimas" data-field="kvalifVertinimas">
+              <option value="">--</option>
+              <option value="Atitinka">Atitinka</option>
+              <option value="Neatitinka">Neatitinka</option>
+              <option value="Netaikomi">Netaikomi</option>
+            </select>
+          </td>
+          <td>
+            <select id="kiti-vertinimas" data-field="kitiVertinimas">
+              <option value="">--</option>
+              <option value="Atitinka">Atitinka</option>
+              <option value="Neatitinka">Neatitinka</option>
+              <option value="Netaikomi">Netaikomi</option>
+            </select>
+          </td>
+          <td><textarea id="kvalif-pastabos" data-field="kvalifPastabos"></textarea></td>
+        </tr>
+      </tbody>
+    </table>
+  ` : '';
+
+  return `
+    <div class="section" data-section="4">
+      <div class="section-header" onclick="toggleSection(this)">
+        <h3><span class="num">4</span> Pirkimo procedūrų eiga</h3>
+        <span class="toggle">▼</span>
+      </div>
+      <div class="section-body">
+        <div id="neskelbiama-fields" class="conditional show">
+          <div class="field-grid">
+            <div class="field">
+              <label>Kviestų tiekėjų skaičius</label>
+              <input type="number" id="kviesta-skaicius" data-field="kviestaSkaicius" min="1" value="1">
+            </div>
+            <div class="field full-row">
+              <label>Kviestų tiekėjų pavadinimai</label>
+              <input type="text" id="kviesti-tiekejai" data-field="kviestiTiekejai" placeholder="Tiekėjas A, Tiekėjas B, ...">
+            </div>
+            <div class="field full-row">
+              <label>Pagrindas neskelbiamai apklausai (Aprašo punktas)</label>
+              <select id="apraso-pagrindas" data-field="aprasoPagrindas">
+                <option value="">-- Pasirinkite --</option>
+                ${apraso29Options}
+              </select>
+              <div class="hint">Auto pasirinkimas pagal pirkimo būdą įvyksta pasirinkus "Neskelbiama apklausa"</div>
+            </div>
+          </div>
+        </div>
+
+        <h4 style="font-size:13px; margin:16px 0 8px; color:#003a70;">1 lentelė. Gauti pasiūlymai</h4>
+        <div class="helper-box info">
+          Surašyti ekonominio naudingumo mažėjimo (kainos didėjimo) tvarka.
+        </div>
+        <table class="data-table" id="pasiulymu-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">Nr.</th>
+              <th>Tiekėjo pavadinimas</th>
+              <th style="width:120px;">Kaina be PVM</th>
+              <th style="width:120px;">Kaina su PVM</th>
+              <th style="width:90px;">Pasiūlymo vertinimas</th>
+              ${formNum === 1 ? '<th style="width:90px;">Kiti reikalavimai</th>' : ''}
+              <th>Neatitikimo aprašymas</th>
+              <th style="width:60px;"></th>
+            </tr>
+          </thead>
+          <tbody id="pasiulymu-tbody"></tbody>
+        </table>
+        <button type="button" class="add-row-btn" onclick="addPasiulymasRow()">+ Pridėti pasiūlymą</button>
+
+        ${formNum === 1 ? renderForm1NationalSecurity() : ''}
+        ${derybUI}
+      </div>
+    </div>
+  `;
+}
+
+function renderForm1NationalSecurity() {
+  return `
+    <h4 style="font-size:13px; margin:20px 0 8px; color:#003a70;">2 lentelė. Atitikimas nacionalinio saugumo reikalavimams</h4>
+    <div class="field full-row">
+      <label>Ar tiekėjui suteikiama prieiga prie reikšmingų ryšių/IS sistemų arba ar perkamos BVPŽ kodų prekės/paslaugos iš sąrašo?</label>
+      <div class="radio-group inline">
+        <label><input type="radio" name="natSaug" value="Taip" onchange="toggleNatSaug(this)"> Taip</label>
+        <label><input type="radio" name="natSaug" value="Ne" checked onchange="toggleNatSaug(this)"> Ne</label>
+      </div>
+    </div>
+    <div id="nat-saug-container" class="conditional">
+      <h5 style="font-size:12px; margin:12px 0 6px;">3 lentelė. Atitikimas nacionalinio saugumo reikalavimams</h5>
+      <table class="data-table" id="natsaug-table">
+        <thead>
+          <tr>
+            <th style="width:40px;">Nr.</th>
+            <th>Tiekėjas</th>
+            <th style="width:100px;">Pateikė dokumentus<br><span style="font-weight:normal;font-size:10px;">(52 str. 3d., 51 str. 12d.)</span></th>
+            <th style="width:100px;">Neregistruoti rizikinguose sąrašuose</th>
+            <th>Pastabos</th>
+            <th style="width:60px;"></th>
+          </tr>
+        </thead>
+        <tbody id="natsaug-tbody"></tbody>
+      </table>
+      <button type="button" class="add-row-btn" onclick="addNatSaugRow()">+ Pridėti tiekėją</button>
+    </div>
+  `;
+}
+
+// Section 5 - Kita informacija
+function renderSection5(formNum) {
+  return `
+    <div class="section" data-section="5">
+      <div class="section-header" onclick="toggleSection(this)">
+        <h3><span class="num">5</span> Kita informacija</h3>
+        <span class="toggle">▼</span>
+      </div>
+      <div class="section-body">
+        <div class="field full-row">
+          <label>Papildoma informacija</label>
+          <textarea id="kita-info" data-field="kitaInfo" rows="5" placeholder="Pvz., informacija apie perkamą objektą, kiekį, neįprastai mažos kainos pagrindimą, nacionalinio saugumo prevencijos specialistų informaciją ar kt."></textarea>
+          <div class="hint">Šiame skyriuje galima išdėstyti reikšmingą kontekstinę informaciją, kuri padėtų tvirtinančiajam asmeniui priimti sprendimą.</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Section 6 - Sprendimai (su scenarijaus pasirinkimu)
+function renderSection6(formNum) {
+  return `
+    <div class="section" data-section="6">
+      <div class="section-header" onclick="toggleSection(this)">
+        <h3><span class="num">6</span> Sprendimai</h3>
+        <span class="toggle">▼</span>
+      </div>
+      <div class="section-body">
+        <div class="helper-box info">
+          <strong>Pasirinkite scenarijų:</strong>
+          Pagal pasirinkimą sprendimų tekstas bus automatiškai įtrauktas į pažymą.
+        </div>
+        <div class="field full-row">
+          <label>Pirkimo eigos scenarijus <span class="req">*</span></label>
+          <select id="sprendimo-scenarijus" data-field="sprendimoScenarijus" onchange="onScenarijusChange()">
+            <option value="">-- Pasirinkite --</option>
+            <option value="sutartis">Sudaroma sutartis (yra laimėtojas)</option>
+            <option value="vienas-tiekejas">Sudaroma sutartis (vienas tiekėjas / liko vienas)</option>
+            <option value="atmesta">Atmetami visi pasiūlymai</option>
+            <option value="negauta">Negauta pasiūlymų</option>
+            ${formNum === 2 ? '<option value="nutraukta">Nutraukiamos pirkimo procedūros</option>' : ''}
+          </select>
+        </div>
+
+        <div id="sprendimo-detales" class="conditional" style="margin-top:16px;">
+          <div id="laimet-fields" class="conditional">
+            <div class="field full-row">
+              <label>Laimėjusio tiekėjo pavadinimas</label>
+              <input type="text" id="laimetojas" data-field="laimetojas" placeholder="UAB Pavyzdys">
+            </div>
+            <div class="field full-row">
+              <label>Pasiūlymų eilė (jei daugiau nei vienas tiekėjas)</label>
+              <textarea id="pasiulymu-eile" data-field="pasiulymuEile" rows="3" placeholder="1. UAB A - 10 000 Eur be PVM&#10;2. UAB B - 11 500 Eur be PVM"></textarea>
+              <div class="hint">Surašykite ekonominio naudingumo mažėjimo tvarka</div>
+            </div>
+          </div>
+
+          <div id="nutraukimo-fields" class="conditional">
+            <div class="field full-row">
+              <label>Nutraukimo priežastis</label>
+              <textarea id="nutraukimo-priezastis" data-field="nutraukimoPriezastis" rows="3" placeholder="Pvz., dėl pasikeitusių aplinkybių..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Section 7 - Sutarties nuostatos
+function renderSection7(formNum) {
+  const sutartiesType = formNum === 1 ? `
+    <div class="field full-row">
+      <label>Sutartis sudaroma</label>
+      <div class="radio-group inline">
+        <label><input type="radio" name="sutartisRastu" value="Žodžiu" onchange="toggleSutartisRastu(this)"> Žodžiu</label>
+        <label><input type="radio" name="sutartisRastu" value="Raštu" checked onchange="toggleSutartisRastu(this)"> Raštu</label>
+      </div>
+    </div>
+  ` : `
+    <div class="field full-row">
+      <div class="small-note">2 priedo formoje sutartis sudaroma raštu (numatyta pagal nutylėjimą).</div>
+    </div>
+  `;
+
+  const kainaTaisykles = formNum === 2 ? `
+    <div class="field full-row">
+      <label>Sutarties kainos pobūdis</label>
+      <div class="checkbox-group">
+        <label><input type="radio" name="kainosTipas" value="laimejusi" checked> Lygi laimėjusio pasiūlymo kainai</label>
+        <label><input type="radio" name="kainosTipas" value="specialios"> Lygi sumai, nurodytai Sutarties Specialiosiose sąlygose</label>
+        <label><input type="radio" name="kainosTipas" value="kita"> Kita: <input type="text" id="kainosKita" data-field="kainosKita" style="display:inline-block;width:60%;margin-left:8px;"></label>
+      </div>
+    </div>
+  ` : `
+    <div class="field full-row">
+      <div class="checkbox-group">
+        <label><input type="checkbox" data-field="kainaLygiLaimejusio" checked> Sutarties kaina lygi laimėjusio pasiūlymo kainai</label>
+      </div>
+    </div>
+  `;
+
+  return `
+    <div class="section" data-section="7">
+      <div class="section-header" onclick="toggleSection(this)">
+        <h3><span class="num">7</span> Sutarties nuostatos</h3>
+        <span class="toggle">▼</span>
+      </div>
+      <div class="section-body">
+        <div class="field-grid">
+          <div class="field">
+            <label>Sutarties kaina be PVM (Eur)</label>
+            <input type="number" id="sutarties-be-pvm" data-field="sutartiesBePvm" step="0.01">
+          </div>
+          <div class="field">
+            <label>Sutarties kaina su PVM (Eur)</label>
+            <input type="number" id="sutarties-su-pvm" data-field="sutartiesSuPvm" step="0.01">
+          </div>
+          ${kainaTaisykles}
+          ${sutartiesType}
+          <div id="zodziu-fields" class="conditional">
+            <div class="helper-box">
+              Pildoma tik jei sutartis sudaroma žodžiu
+            </div>
+            <div class="field-grid">
+              <div class="field">
+                <label>Apmokėjimas</label>
+                <div class="radio-group">
+                  <label><input type="radio" name="apmokejimasTipas" value="standart" checked> Standartinis (po sąskaitos gavimo)</label>
+                  <label><input type="radio" name="apmokejimasTipas" value="isankst"> Išankstinis</label>
+                </div>
+              </div>
+              <div class="field">
+                <label>Apmokėjimo terminas (kalendorinės dienos)</label>
+                <input type="number" id="apmok-terminas" data-field="apmokTerminas" min="1" value="30">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Section 8 - Priedai ir tvirtintojas
+function renderSection8(formNum) {
+  const tvirtintojaiOptions = TVIRTINTOJAI.map(t => `<option value="${t.value}">${t.label}</option>`).join('');
+
+  return `
+    <div class="section" data-section="8">
+      <div class="section-header" onclick="toggleSection(this)">
+        <h3><span class="num">8</span> Priedai ir tvirtinimas</h3>
+        <span class="toggle">▼</span>
+      </div>
+      <div class="section-body">
+        <div class="field full-row">
+          <label>Priedai (pažymėkite kurie pridedami)</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" data-field="priedasSalygos"> 1 priedas. Pirkimo sąlygos</label>
+            <label><input type="checkbox" data-field="priedasLaimejes"> 2 priedas. Laimėjęs pasiūlymas</label>
+            <label><input type="checkbox" data-field="priedasPasiulymai"> 3 priedas. Tiekėjų pasiūlymai</label>
+            <label><input type="checkbox" data-field="priedasEkspertu"> 4 priedas. Ekspertų išvada (-os)</label>
+            <label><input type="checkbox" data-field="priedasKita"> 5 priedas. Kiti dokumentai: <input type="text" id="priedas-kita-tekstas" data-field="priedasKitaTekstas" style="display:inline-block;width:60%;margin-left:8px;" placeholder="nurodyti"></label>
+          </div>
+        </div>
+        <div class="field-grid">
+          <div class="field">
+            <label>Pažymos data</label>
+            <input type="date" id="doc-date" data-field="docDate">
+          </div>
+          <div class="field">
+            <label>Pažymos numeris</label>
+            <input type="text" id="doc-nr" data-field="docNr" placeholder="Pvz., MV-2026-001">
+          </div>
+          <div class="field full-row">
+            <label>Tvirtina</label>
+            <select id="tvirtintojas" data-field="tvirtintojas">
+              ${tvirtintojaiOptions}
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderForm1() {
+  return `
+    ${renderSection1(1)}
+    ${renderSection2(1)}
+    ${renderSection3(1)}
+    ${renderSection4(1)}
+    ${renderSection5(1)}
+    ${renderSection6(1)}
+    ${renderSection7(1)}
+    ${renderSection8(1)}
+  `;
+}
+
+function renderForm2() {
+  return `
+    ${renderSection1(2)}
+    ${renderSection2(2)}
+    ${renderSection3(2)}
+    ${renderSection4(2)}
+    ${renderSection5(2)}
+    ${renderSection6(2)}
+    ${renderSection7(2)}
+    ${renderSection8(2)}
+  `;
+}
+
+// ============================================================
+// SECTION TOGGLE
+// ============================================================
+function toggleSection(headerEl) {
+  headerEl.parentElement.classList.toggle('collapsed');
+}
+
+// ============================================================
+// CONDITIONAL TOGGLES
+// ============================================================
+function toggleSkaidymas(radio) {
+  const container = document.getElementById('dalys-container');
+  if (radio.value === 'taip') {
+    container.classList.add('show');
+    if (document.querySelectorAll('#dalys-tbody tr').length === 0) addDalis();
+  } else {
+    container.classList.remove('show');
+  }
+}
+
+function toggleCvpIs(radio) {
+  document.getElementById('cvpis-nr-container').classList.toggle('show', radio.value === 'CVP IS');
+}
+
+function toggleDerybos(radio) {
+  const section = document.getElementById('derybos-section');
+  if (section) section.classList.toggle('show', radio.value === 'Vykdomos');
+}
+
+function toggleNatSaug(radio) {
+  document.getElementById('nat-saug-container').classList.toggle('show', radio.value === 'Taip');
+  if (radio.value === 'Taip' && document.querySelectorAll('#natsaug-tbody tr').length === 0) {
+    addNatSaugRow();
+  }
+}
+
+function toggleSutartisRastu(radio) {
+  const zodziuFields = document.getElementById('zodziu-fields');
+  if (zodziuFields) zodziuFields.classList.toggle('show', radio.value === 'Žodžiu');
+}
+
+// ============================================================
+// AUTO-FILL APRAŠO 29 PUNKTAS based on pirkimo būdas
+// ============================================================
+function onBudasChange() {
+  const budas = document.getElementById('pirkimo-budas').value;
+  const neskelbContainer = document.getElementById('neskelbiama-fields');
+  if (neskelbContainer) {
+    if (budas.toLowerCase().includes('neskelbiama')) {
+      neskelbContainer.classList.add('show');
+      // Auto-suggest 29.1 if vertė ≤ 15000
+      const verte = parseFloat(document.getElementById('verte-be-pvm').value || 0);
+      const aprasoSelect = document.getElementById('apraso-pagrindas');
+      if (aprasoSelect && !aprasoSelect.value && verte > 0 && verte <= 15000) {
+        aprasoSelect.value = '29.1';
+      }
+    } else {
+      neskelbContainer.classList.remove('show');
+    }
+  }
+  // Auto vertinimo kriterijus jeigu forma 1 ir nepasirinktas
+  if (currentForm === 1) {
+    const krit = document.getElementById('vertinimo-kriterijus');
+    if (krit && !krit.value) krit.value = 'Kaina';
+  }
+}
+
+// ============================================================
+// SCENARIJAUS keitimas (Sprendimai)
+// ============================================================
+function onScenarijusChange() {
+  const scen = document.getElementById('sprendimo-scenarijus').value;
+  document.getElementById('sprendimo-detales').classList.toggle('show', !!scen);
+  document.getElementById('laimet-fields').classList.toggle('show',
+    scen === 'sutartis' || scen === 'vienas-tiekejas');
+  document.getElementById('nutraukimo-fields').classList.toggle('show',
+    scen === 'nutraukta');
+}
+
+// ============================================================
+// VALIDATION
+// ============================================================
+function validateValue() {
+  const verte = parseFloat(document.getElementById('verte-be-pvm').value || 0);
+  const warning = document.getElementById('value-warning');
+  warning.style.display = 'none';
+  warning.textContent = '';
+
+  if (currentForm === 1 && verte > 15000) {
+    warning.style.display = 'block';
+    warning.textContent = '⚠️ Vertė virš 15 000 Eur - turėtų būti naudojama 2 priedo (organizatorių) forma';
+  } else if (currentForm === 1 && verte < 5000 && verte > 0) {
+    warning.style.display = 'block';
+    warning.textContent = '⚠️ Iki 5 000 Eur be PVM pirkimo pažymos nerengiamos';
+  } else if (currentForm === 2 && verte <= 15000 && verte > 0) {
+    warning.style.display = 'block';
+    warning.textContent = '⚠️ Vertė neviršija 15 000 Eur - galima naudoti 1 priedo (iniciatorių) formą';
+  }
+  // Re-trigger budo logic
+  onBudasChange();
+}
+
+// ============================================================
+// DYNAMIC TABLE ROWS
+// ============================================================
+let supplierRowCounter = 0;
+
+function addPasiulymasRow() {
+  supplierRowCounter++;
+  const tbody = document.getElementById('pasiulymu-tbody');
+  const num = tbody.children.length + 1;
+  const tr = document.createElement('tr');
+  tr.className = 'supplier-row';
+  tr.dataset.id = supplierRowCounter;
+
+  const kitiCol = currentForm === 1 ? `
+    <td>
+      <select data-field="kitiVert">
+        <option value="">--</option>
+        <option value="Atitinka">Atitinka</option>
+        <option value="Neatitinka">Neatitinka</option>
+      </select>
+    </td>
+  ` : '';
+
+  tr.innerHTML = `
+    <td style="text-align:center;">${num}</td>
+    <td><input type="text" data-field="tiekejas" placeholder="Tiekėjo pavadinimas"></td>
+    <td><input type="number" data-field="kainaBePvm" step="0.01"></td>
+    <td><input type="number" data-field="kainaSuPvm" step="0.01"></td>
+    <td>
+      <select data-field="pasiulVert">
+        <option value="">--</option>
+        <option value="Atitinka">Atitinka</option>
+        <option value="Neatitinka">Neatitinka</option>
+      </select>
+    </td>
+    ${kitiCol}
+    <td><textarea data-field="neatitikimas" placeholder="Jei netitinka - paaiškinti"></textarea></td>
+    <td style="text-align:center;"><button type="button" class="btn-small btn-remove" onclick="removeRow(this)">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+  renumberTable('pasiulymu-tbody');
+}
+
+function addGalutinisRow() {
+  const tbody = document.getElementById('galutiniai-tbody');
+  if (!tbody) return;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td style="text-align:center;">${tbody.children.length + 1}</td>
+    <td><input type="text" data-field="tiekejas" placeholder="Tiekėjas"></td>
+    <td><input type="number" data-field="galKainaBePvm" step="0.01"></td>
+    <td><input type="number" data-field="galKainaSuPvm" step="0.01"></td>
+    <td>
+      <select data-field="galVert">
+        <option value="">--</option>
+        <option value="Atitinka">Atitinka</option>
+        <option value="Neatitinka">Neatitinka</option>
+      </select>
+    </td>
+    <td><textarea data-field="galNeatitikimas"></textarea></td>
+    <td style="text-align:center;"><button type="button" class="btn-small btn-remove" onclick="removeRow(this)">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+  renumberTable('galutiniai-tbody');
+}
+
+function addNatSaugRow() {
+  const tbody = document.getElementById('natsaug-tbody');
+  if (!tbody) return;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td style="text-align:center;">${tbody.children.length + 1}</td>
+    <td><input type="text" data-field="natTiekejas"></td>
+    <td>
+      <select data-field="natDok">
+        <option value="">--</option>
+        <option value="Taip">Taip</option>
+        <option value="Ne">Ne</option>
+      </select>
+    </td>
+    <td>
+      <select data-field="natRiziking">
+        <option value="">--</option>
+        <option value="Taip">Taip</option>
+        <option value="Ne">Ne</option>
+      </select>
+    </td>
+    <td><textarea data-field="natPastabos"></textarea></td>
+    <td style="text-align:center;"><button type="button" class="btn-small btn-remove" onclick="removeRow(this)">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+  renumberTable('natsaug-tbody');
+}
+
+function addDalis() {
+  const tbody = document.getElementById('dalys-tbody');
+  if (!tbody) return;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td style="text-align:center;">${tbody.children.length + 1}</td>
+    <td><input type="text" data-field="dalisPav"></td>
+    <td><input type="number" data-field="dalisBePvm" step="0.01"></td>
+    <td><input type="number" data-field="dalisSuPvm" step="0.01"></td>
+    <td style="text-align:center;"><button type="button" class="btn-small btn-remove" onclick="removeRow(this)">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+  renumberTable('dalys-tbody');
+}
+
+function removeRow(btn) {
+  const tr = btn.closest('tr');
+  const tbody = tr.parentElement;
+  tr.remove();
+  renumberTable(tbody.id);
+}
+
+function renumberTable(tbodyId) {
+  const tbody = document.getElementById(tbodyId);
+  if (!tbody) return;
+  Array.from(tbody.children).forEach((row, idx) => {
+    row.children[0].textContent = idx + 1;
+  });
+}
+
+function attachEventHandlers() {
+  // Already attached via onchange/onclick attributes
+}
+
+// ============================================================
+// DRAFT MANAGEMENT (localStorage)
+// ============================================================
+const DRAFTS_KEY = 'litgrid_pirkimo_drafts';
+
+function gatherFormData() {
+  const data = {
+    formNum: currentForm,
+    timestamp: new Date().toISOString(),
+    fields: {},
+    radios: {},
+    rows: { pasiulymai: [], galutiniai: [], natSaug: [], dalys: [] }
+  };
+
+  // Įprasti įvedimo laukai (data-field)
+  document.querySelectorAll('[data-field]').forEach(el => {
+    if (el.closest('tbody')) return; // Lentelės eilutes apdorosim atskirai
+    const key = el.dataset.field;
+    if (el.type === 'checkbox') data.fields[key] = el.checked;
+    else data.fields[key] = el.value;
+  });
+
+  // Radios
+  document.querySelectorAll('input[type="radio"]:checked').forEach(r => {
+    data.radios[r.name] = r.value;
+  });
+
+  // Rows
+  ['pasiulymu-tbody', 'galutiniai-tbody', 'natsaug-tbody', 'dalys-tbody'].forEach(tbodyId => {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    const key = tbodyId.replace('-tbody', '');
+    const targetKey = key === 'pasiulymu' ? 'pasiulymai' : (key === 'natsaug' ? 'natSaug' : key);
+    Array.from(tbody.children).forEach(tr => {
+      const rowData = {};
+      tr.querySelectorAll('[data-field]').forEach(el => {
+        rowData[el.dataset.field] = el.type === 'checkbox' ? el.checked : el.value;
+      });
+      data.rows[targetKey].push(rowData);
+    });
+  });
+
+  return data;
+}
+
+function loadFormData(data) {
+  if (!data) return;
+  // Set fields
+  Object.keys(data.fields || {}).forEach(key => {
+    const el = document.querySelector(`[data-field="${key}"]`);
+    if (el && !el.closest('tbody')) {
+      if (el.type === 'checkbox') el.checked = !!data.fields[key];
+      else el.value = data.fields[key] || '';
+    }
+  });
+  // Radios
+  Object.keys(data.radios || {}).forEach(name => {
+    const radio = document.querySelector(`input[type="radio"][name="${name}"][value="${data.radios[name]}"]`);
+    if (radio) {
+      radio.checked = true;
+      // Trigger change handlers
+      if (radio.onchange) radio.onchange();
+    }
+  });
+  // Rows
+  if (data.rows) {
+    if (data.rows.pasiulymai) {
+      data.rows.pasiulymai.forEach(rowData => {
+        addPasiulymasRow();
+        const tbody = document.getElementById('pasiulymu-tbody');
+        const tr = tbody.lastElementChild;
+        Object.keys(rowData).forEach(k => {
+          const el = tr.querySelector(`[data-field="${k}"]`);
+          if (el) el.value = rowData[k] || '';
+        });
+      });
+    }
+    if (data.rows.galutiniai) {
+      data.rows.galutiniai.forEach(rowData => {
+        addGalutinisRow();
+        const tbody = document.getElementById('galutiniai-tbody');
+        if (!tbody) return;
+        const tr = tbody.lastElementChild;
+        Object.keys(rowData).forEach(k => {
+          const el = tr.querySelector(`[data-field="${k}"]`);
+          if (el) el.value = rowData[k] || '';
+        });
+      });
+    }
+    if (data.rows.natSaug) {
+      data.rows.natSaug.forEach(rowData => {
+        addNatSaugRow();
+        const tbody = document.getElementById('natsaug-tbody');
+        if (!tbody) return;
+        const tr = tbody.lastElementChild;
+        Object.keys(rowData).forEach(k => {
+          const el = tr.querySelector(`[data-field="${k}"]`);
+          if (el) el.value = rowData[k] || '';
+        });
+      });
+    }
+    if (data.rows.dalys) {
+      data.rows.dalys.forEach(rowData => {
+        addDalis();
+        const tbody = document.getElementById('dalys-tbody');
+        if (!tbody) return;
+        const tr = tbody.lastElementChild;
+        Object.keys(rowData).forEach(k => {
+          const el = tr.querySelector(`[data-field="${k}"]`);
+          if (el) el.value = rowData[k] || '';
+        });
+      });
+    }
+  }
+  // Trigger conditional toggles
+  ['pirkimo-budas'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.onchange) el.onchange();
+  });
+  const scen = document.getElementById('sprendimo-scenarijus');
+  if (scen && scen.value) onScenarijusChange();
+}
+
+function getDrafts() {
+  try {
+    return JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
+  } catch { return {}; }
+}
+
+function saveDrafts(drafts) {
+  localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+}
+
+function saveDraft() {
+  const data = gatherFormData();
+  const pavadinimas = document.getElementById('pirkimo-pavadinimas')?.value || '';
+  const name = pavadinimas || `Juodraštis ${currentForm} priedas`;
+  const id = currentDraftId || ('draft_' + Date.now());
+
+  const drafts = getDrafts();
+  drafts[id] = { name, data, savedAt: new Date().toISOString() };
+  saveDrafts(drafts);
+  currentDraftId = id;
+  document.getElementById('draft-info').textContent = `Juodraštis: "${name}" (išsaugotas ${new Date().toLocaleTimeString('lt-LT')})`;
+  showToast('Juodraštis išsaugotas', 'success');
+}
+
+function openDraftsList() {
+  const drafts = getDrafts();
+  const list = document.getElementById('drafts-list');
+  const empty = document.getElementById('drafts-empty');
+  list.innerHTML = '';
+  const ids = Object.keys(drafts).sort((a, b) =>
+    new Date(drafts[b].savedAt) - new Date(drafts[a].savedAt)
+  );
+  if (ids.length === 0) {
+    empty.style.display = 'block';
+    list.style.display = 'none';
+  } else {
+    empty.style.display = 'none';
+    list.style.display = 'block';
+    ids.forEach(id => {
+      const d = drafts[id];
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <div class="meta">
+          <div class="name">${escapeHtml(d.name)}</div>
+          <div class="info">${d.data.formNum} priedas &middot; ${new Date(d.savedAt).toLocaleString('lt-LT')}</div>
+        </div>
+        <div class="actions">
+          <button class="btn-small" onclick="loadDraft('${id}')">Įkelti</button>
+          <button class="btn-small btn-remove" onclick="deleteDraft('${id}')">✕</button>
+        </div>
+      `;
+      list.appendChild(li);
+    });
+  }
+  document.getElementById('drafts-modal').classList.add('show');
+}
+
+function loadDraft(id) {
+  const drafts = getDrafts();
+  const d = drafts[id];
+  if (!d) return;
+  // If different form - re-render
+  if (d.data.formNum !== currentForm) {
+    if (!confirm(`Šis juodraštis yra ${d.data.formNum} priedo. Ar pakeisti formą?`)) return;
+    currentForm = d.data.formNum;
+    renderForm(currentForm);
+  } else {
+    // Reset form to clear data
+    renderForm(currentForm);
+  }
+  // Wait for DOM to render
+  setTimeout(() => {
+    loadFormData(d.data);
+    currentDraftId = id;
+    document.getElementById('draft-info').textContent = `Juodraštis: "${d.name}"`;
+    closeModal('drafts-modal');
+    showToast('Juodraštis įkeltas', 'success');
+  }, 50);
+}
+
+function deleteDraft(id) {
+  if (!confirm('Ar tikrai pašalinti šį juodraštį?')) return;
+  const drafts = getDrafts();
+  delete drafts[id];
+  saveDrafts(drafts);
+  openDraftsList(); // refresh
+}
+
+function resetForm() {
+  if (!confirm('Ar tikrai išvalyti formą? Neišsaugoti pakeitimai bus prarasti.')) return;
+  currentDraftId = null;
+  renderForm(currentForm);
+  document.getElementById('draft-info').textContent = '';
+  showToast('Forma išvalyta', 'success');
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, m => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[m]));
+}
+
+// ============================================================
+// PREVIEW
+// ============================================================
+function showPreview() {
+  const data = gatherFormData();
+  const html = buildPreviewHtml(data);
+  document.getElementById('preview-content').innerHTML = html;
+  document.getElementById('preview-modal').classList.add('show');
+}
+
+function formatDocDate(isoDate) {
+  if (!isoDate) return '____ m. ___________ ___ d.';
+  const d = new Date(isoDate);
+  return `${d.getFullYear()} m. ${MENESIAI[d.getMonth()]} ${d.getDate()} d.`;
+}
+
+function buildPreviewHtml(data) {
+  const f = data.fields;
+  const r = data.radios;
+  const formNum = data.formNum;
+  const dateStr = formatDocDate(f.docDate);
+  const docNr = f.docNr || '____';
+
+  let html = `<div class="preview-doc">`;
+  html += `<h1>Tiekėjų apklausos pažyma</h1>`;
+  html += `<div class="doc-meta">${dateStr} Nr. ${escapeHtml(docNr)}<br>Vilnius</div>`;
+
+  // Section 1 + 2 - juxtaposed
+  html += `<table>`;
+  html += `<tr><td colspan="2" class="section-title">1. Informacija apie pirkimo objektą</td><td colspan="2" class="section-title">2. Pirkimo iniciatorius / organizatorius</td></tr>`;
+  html += `<tr>`;
+  html += `<td colspan="2" style="width:50%;">`;
+  html += `<strong>Pirkimo pavadinimas:</strong> ${escapeHtml(f.pirkimoPavadinimas || '____')} (toliau – Pirkimas).<br>`;
+  if (formNum === 2 && f.korteleNr) {
+    html += `<strong>Pirkimo kortelės registravimo data ir Nr.:</strong> ${formatDocDate(f.korteleData)}, Nr. ${escapeHtml(f.korteleNr)}<br>`;
+  }
+  html += `<strong>Numatoma vertė:</strong> ${escapeHtml(f.verteBePvm || '____')} Eur be PVM; ${escapeHtml(f.verteSuPvm || '____')} Eur su PVM.<br>`;
+
+  if (formNum === 2 && r.skaidoma === 'taip') {
+    html += `☒ Pirkimo objektas skaidomas į dalis:<br>`;
+    (data.rows.dalys || []).forEach((d, i) => {
+      html += `${i+1} dalis: ${escapeHtml(d.dalisPav || '____')} - ${escapeHtml(d.dalisBePvm || '____')} EUR be PVM; ${escapeHtml(d.dalisSuPvm || '____')} EUR su PVM.<br>`;
+    });
+  } else {
+    html += `☒ Pirkimo objektas neskaidomas į dalis.<br>`;
+  }
+  html += `Pirkimo objektas nėra įtrauktas į CPO katalogą.`;
+  html += `</td>`;
+
+  // Iniciatorius/organizatorius
+  html += `<td colspan="2">`;
+  if (formNum === 2) {
+    html += `<strong>Iniciatorius:</strong><br>${escapeHtml(f.iniPadalinys || '')}, ${escapeHtml(f.iniPareigos || '')}, ${escapeHtml(f.iniVardas || '')}.<br>`;
+    html += `<strong>Organizatorius:</strong><br>${escapeHtml(f.orgPareigos || '')}, ${escapeHtml(f.orgVardas || '')}.`;
+  } else {
+    html += `<strong>Iniciatorius/Organizatorius:</strong><br>${escapeHtml(f.iniPadalinys || '')}, ${escapeHtml(f.iniPareigos || '')}, ${escapeHtml(f.iniVardas || '')}.`;
+  }
+  html += `</td>`;
+  html += `</tr>`;
+
+  // Section 3
+  html += `<tr><td colspan="4" class="section-title">3. Pirkimo procedūrų reglamentavimas</td></tr>`;
+  html += `<tr><td colspan="4">`;
+  html += `Pirkimas vykdomas vadovaujantis: LITGRID AB mažos vertės pirkimų tvarkos aprašu.<br>`;
+  html += `<strong>Pirkimo vertė:</strong> Mažos vertės pirkimas.<br>`;
+  html += `<strong>Pirkimo būdas:</strong> ${escapeHtml(f.pirkimoBudas || '____')}.<br>`;
+  html += `<strong>Vertinimo kriterijus:</strong> ${escapeHtml(f.vertinimoKriterijus || (formNum === 1 ? 'Kaina' : '____'))}.<br>`;
+  html += `<strong>Derybos:</strong> ${r.derybos || 'Nevykdomos'}.<br>`;
+  let atlPrefix = (formNum === 2 && r.atliekamas === 'CVP IS' && f.cvpisNr) ? `CVP IS priemonėmis (CVP IS Nr. ${escapeHtml(f.cvpisNr)})` : (r.atliekamas || '____');
+  html += `<strong>Pirkimas atliekamas:</strong> ${atlPrefix}.<br>`;
+  html += `<strong>Pašalinimo pagrindų ir kvalifikacijos reikalavimai:</strong><br>`;
+  html += `${f.pasalKvalNetikrinama ? '☒' : '☐'} Tiekėjų pašalinimo pagrindų nebuvimas ir kvalifikacija nėra tikrinama<br>`;
+  html += `${f.pasalTikrinamas ? '☒' : '☐'} Tiekėjų pašalinimo pagrindų nebuvimas yra tikrinamas<br>`;
+  html += `${f.kvalTikrinama ? '☒' : '☐'} Tiekėjų kvalifikacija yra tikrinama<br>`;
+  html += `${f.kvalNetikrinama ? '☒' : '☐'} Tiekėjų kvalifikacija nėra tikrinama`;
+  html += `</td></tr>`;
+
+  // Section 4
+  html += `<tr><td colspan="4" class="section-title">4. Pirkimo procedūrų eiga</td></tr>`;
+  html += `<tr><td colspan="4">`;
+  if (f.pirkimoBudas && f.pirkimoBudas.toLowerCase().includes('neskelbiama')) {
+    html += `<strong>Tiekėjai, kviesti pateikti pasiūlymus:</strong> ${escapeHtml(f.kviestaSkaicius || '__')} tiekėjas (-ai): ${escapeHtml(f.kviestiTiekejai || '____')}.<br>`;
+    html += `<strong>Pagrindas neskelbiamai apklausai:</strong> Aprašo ${escapeHtml(f.aprasoPagrindas || '____')} p.<br>`;
+  }
+  // Lentelė 1
+  html += `<br><strong>1 lentelė. Gauti pasiūlymai:</strong>`;
+  html += `<table style="margin-top:6px;"><tr><th>Nr.</th><th>Tiekėjas</th><th>Kaina be PVM</th><th>Kaina su PVM</th><th>Vertinimas</th>${formNum === 1 ? '<th>Kiti reikalavimai</th>' : ''}<th>Neatitikimas</th></tr>`;
+  (data.rows.pasiulymai || []).forEach((p, i) => {
+    html += `<tr><td>${i+1}</td><td>${escapeHtml(p.tiekejas || '')}</td><td>${escapeHtml(p.kainaBePvm || '')}</td><td>${escapeHtml(p.kainaSuPvm || '')}</td><td>${escapeHtml(p.pasiulVert || '')}</td>${formNum === 1 ? `<td>${escapeHtml(p.kitiVert || '')}</td>` : ''}<td>${escapeHtml(p.neatitikimas || '')}</td></tr>`;
+  });
+  html += `</table>`;
+
+  // Form 2 derybos lentelė
+  if (formNum === 2 && r.derybos === 'Vykdomos') {
+    html += `<br><strong>2 lentelė. Galutiniai pasiūlymai:</strong>`;
+    html += `<table><tr><th>Nr.</th><th>Tiekėjas</th><th>Galutinė kaina be PVM</th><th>Galutinė kaina su PVM</th><th>Vertinimas</th><th>Neatitikimas</th></tr>`;
+    (data.rows.galutiniai || []).forEach((p, i) => {
+      html += `<tr><td>${i+1}</td><td>${escapeHtml(p.tiekejas || '')}</td><td>${escapeHtml(p.galKainaBePvm || '')}</td><td>${escapeHtml(p.galKainaSuPvm || '')}</td><td>${escapeHtml(p.galVert || '')}</td><td>${escapeHtml(p.galNeatitikimas || '')}</td></tr>`;
+    });
+    html += `</table>`;
+  }
+
+  // Form 1 nat saugumas
+  if (formNum === 1) {
+    html += `<br><strong>2 lentelė. Nacionalinis saugumas:</strong> ${r.natSaug === 'Taip' ? '☒ Taip ☐ Ne' : '☐ Taip ☒ Ne'}`;
+    if (r.natSaug === 'Taip') {
+      html += `<br><strong>3 lentelė:</strong><table><tr><th>Nr.</th><th>Tiekėjas</th><th>Pateikė dok.</th><th>Neregistruoti</th><th>Pastabos</th></tr>`;
+      (data.rows.natSaug || []).forEach((n, i) => {
+        html += `<tr><td>${i+1}</td><td>${escapeHtml(n.natTiekejas || '')}</td><td>${escapeHtml(n.natDok || '')}</td><td>${escapeHtml(n.natRiziking || '')}</td><td>${escapeHtml(n.natPastabos || '')}</td></tr>`;
+      });
+      html += `</table>`;
+    }
+  }
+  html += `</td></tr>`;
+
+  // Section 5
+  if (f.kitaInfo) {
+    html += `<tr><td colspan="4" class="section-title">5. Kita informacija</td></tr>`;
+    html += `<tr><td colspan="4">${escapeHtml(f.kitaInfo).replace(/\n/g, '<br>')}</td></tr>`;
+  }
+
+  // Section 6 - SPRENDIMAI
+  html += `<tr><td colspan="4" class="section-title">6. Sprendimai</td></tr>`;
+  html += `<tr><td colspan="4">${buildSprendimaiHtml(data)}</td></tr>`;
+
+  // Section 7
+  html += `<tr><td colspan="4" class="section-title">7. Sutarties nuostatos</td></tr>`;
+  html += `<tr><td colspan="4">`;
+  html += `<strong>Sutarties kaina:</strong> ${escapeHtml(f.sutartiesBePvm || '____')} Eur be PVM, t. y. ${escapeHtml(f.sutartiesSuPvm || '____')} Eur su PVM.<br>`;
+  if (formNum === 2) {
+    if (r.kainosTipas === 'specialios') html += `☒ Lygi sumai, nurodytai Sutarties Specialiosiose sąlygose.<br>`;
+    else if (r.kainosTipas === 'kita') html += `☒ Kita: ${escapeHtml(f.kainosKita || '')}<br>`;
+    else html += `☒ Lygi laimėjusio pasiūlymo kainai.<br>`;
+    html += `<strong>Sutartis sudaroma raštu.</strong>`;
+  } else {
+    if (f.kainaLygiLaimejusio) html += `☒ Lygi laimėjusio pasiūlymo kainai.<br>`;
+    html += `<strong>Sutartis sudaroma:</strong> ${r.sutartisRastu === 'Žodžiu' ? '☒ Žodžiu ☐ Raštu' : '☐ Žodžiu ☒ Raštu'}<br>`;
+    if (r.sutartisRastu === 'Žodžiu') {
+      const tipas = r.apmokejimasTipas === 'isankst' ? 'išankstinis apmokėjimas' : 'apmokėjimas po sąskaitos gavimo';
+      html += `Apmokėjimo terminas: ${escapeHtml(f.apmokTerminas || '__')} kalendorinių dienų (${tipas}).`;
+    }
+  }
+  html += `</td></tr>`;
+
+  // Section 8 - priedai
+  html += `<tr><td colspan="4" class="section-title">8. Priedai</td></tr>`;
+  html += `<tr><td colspan="4">`;
+  html += `${f.priedasSalygos ? '☒' : '☐'} 1 priedas. Pirkimo sąlygos<br>`;
+  html += `${f.priedasLaimejes ? '☒' : '☐'} 2 priedas. Laimėjęs pasiūlymas<br>`;
+  html += `${f.priedasPasiulymai ? '☒' : '☐'} 3 priedas. Tiekėjų pasiūlymai<br>`;
+  html += `${f.priedasEkspertu ? '☒' : '☐'} 4 priedas. Ekspertų išvada (-os)<br>`;
+  html += `${f.priedasKita ? '☒' : '☐'} 5 priedas. ${escapeHtml(f.priedasKitaTekstas || '[nurodomi kiti dokumentai]')}<br>`;
+  html += `<br><strong>Tvirtina:</strong> ${escapeHtml(f.tvirtintojas || '____')}`;
+  html += `</td></tr>`;
+
+  html += `</table>`;
+  html += `</div>`;
+  return html;
+}
+
+function buildSprendimaiHtml(data) {
+  const f = data.fields;
+  const formNum = data.formNum;
+  const scen = f.sprendimoScenarijus;
+  if (!scen) return '<em>Pasirinkite scenarijų sprendimų skyriuje.</em>';
+
+  const sprendimai = generateSprendimai(data);
+  return sprendimai.map((s, i) => `${i+1}. ${s}`).join('<br>');
+}
+
+function generateSprendimai(data) {
+  const f = data.fields;
+  const formNum = data.formNum;
+  const scen = f.sprendimoScenarijus;
+  const laimet = f.laimetojas || '<Tiekėjo pavadinimas>';
+  const list = [];
+
+  if (scen === 'sutartis') {
+    list.push('Pripažinti tiekėjo (-ų) pasiūlymą (-us) atitinkančiu (-ais) nustatytus reikalavimus, kurio (-ų) pasiūlymas (-ai) šios pažymos 4 dalies 1 lentelės stulpelyje "Pasiūlymo įvertinimas" pažymėtas varnele "Atitinka".');
+    if ((data.rows.pasiulymai || []).some(p => p.pasiulVert === 'Neatitinka')) {
+      list.push('Pripažinti tiekėjo (-ų) pasiūlymą (-us) neatitinkančiu (-ais) nustatytų reikalavimų, kurio (-ų) pasiūlymas (-ai) šios pažymos 4 dalies 1 lentelės stulpelyje "Pasiūlymo įvertinimas" pažymėtas varnele "Neatitinka" (dėl priežasčių, nurodytų tos pačios lentelės stulpelyje "Neatitikimo aprašymas").');
+      list.push('Remiantis šioje pažymoje nurodytu neatitikimo aprašymu, vadovaujantis Aprašu / Pirkimo sąlygomis, atmesti tiekėjo (-ų) pasiūlymą (-us), kurio (-ų) pasiūlymas (-ai) pažymėtas varnele "Neatitinka".');
+    }
+    if (formNum === 2 && f.kvalifTiekejas) {
+      list.push(`Pripažinti, kad ${escapeHtml(f.kvalifTiekejas)} neturi pašalinimo pagrindų, atitinka Pirkimo sąlygose nustatytus kvalifikacijos ir/ar kitus reikalavimus.`);
+    }
+    if (f.pasiulymuEile) {
+      list.push('Vadovaujantis Aprašu, nustatyti šią pasiūlymų eilę ekonominio naudingumo mažėjimo tvarka:\n' + f.pasiulymuEile);
+    }
+    list.push(`Pripažinti ${escapeHtml(laimet)} pasiūlymą laimėjusiu ir sudaryti su juo sutartį.`);
+    list.push('Sutarties sudarymo atidėjimo terminas nėra taikomas.');
+    list.push('Informuoti dalyvius apie priimtus sprendimus.');
+  } else if (scen === 'vienas-tiekejas') {
+    list.push('Pripažinti tiekėjo pasiūlymą atitinkančiu nustatytus reikalavimus.');
+    if (formNum === 2 && f.kvalifTiekejas) {
+      list.push(`Pripažinti, kad ${escapeHtml(f.kvalifTiekejas)} neturi pašalinimo pagrindų, atitinka Pirkimo sąlygose nustatytus kvalifikacijos ir/ar kitus reikalavimus.`);
+    }
+    list.push('Atsižvelgiant į tai, kad pasiūlymą pateikė tik vienas tiekėjas / pasiūlymą pateikti buvo kviečiamas tik vienas tiekėjas / pirkimo procedūrų metu atmetus kitus pasiūlymus liko vienas tiekėjas, vadovaujantis Aprašu, pasiūlymų eilė nesudaroma.');
+    list.push(`Pripažinti ${escapeHtml(laimet)} pasiūlymą laimėjusiu ir sudaryti su juo sutartį.`);
+    list.push('Sutarties sudarymo atidėjimo terminas nėra taikomas.');
+    list.push('Informuoti dalyvius apie priimtus sprendimus.');
+  } else if (scen === 'atmesta') {
+    list.push('Pripažinti, kad tiekėjų pateikti pasiūlymai neatitinka Pirkimo sąlygų reikalavimų, kaip aprašyta šios pažymos 4 dalies 1 lentelės stulpelyje "Neatitikimo aprašymas".');
+    list.push('Remiantis šioje pažymoje nurodytu neatitikimo aprašymu, vadovaujantis Aprašu / Pirkimo sąlygomis, atmesti visų tiekėjų pasiūlymus.');
+    list.push('Atsižvelgiant į tai, kad atmesti visi pateikti pasiūlymai, vadovaujantis Lietuvos Respublikos pirkimų, atliekamų vandentvarkos, energetikos, transporto ar pašto paslaugų srities perkančiųjų subjektų, įstatymo 41 straipsnio 2 dalies 2 punkto nuostatomis, Pirkimas laikomas pasibaigusiu.');
+    list.push('Informuoti dalyvius apie priimtus sprendimus.');
+  } else if (scen === 'negauta') {
+    list.push('Atsižvelgiant į tai, kad per nustatytą terminą nepateiktas nė vienas pasiūlymas, vadovaujantis Lietuvos Respublikos pirkimų, atliekamų vandentvarkos, energetikos, transporto ar pašto paslaugų srities perkančiųjų subjektų, įstatymo 41 straipsnio 2 dalies 4 punkto nuostatomis, Pirkimas laikomas pasibaigusiu.');
+  } else if (scen === 'nutraukta') {
+    list.push(`Atsižvelgiant į tai, kad ${escapeHtml(f.nutraukimoPriezastis || '____')} bei vadovaujantis Aprašo nuostatomis, nutraukti Pirkimo procedūras.`);
+    list.push('Atsižvelgiant į tai, kad Pirkimo procedūros yra nutraukiamos, vadovaujantis Lietuvos Respublikos pirkimų, atliekamų vandentvarkos, energetikos, transporto ar pašto paslaugų srities perkančiųjų subjektų, įstatymo 41 straipsnio 2 dalies 3 punkto nuostatomis, Pirkimas laikomas pasibaigusiu.');
+    list.push('Informuoti dalyvius apie priimtus sprendimus.');
+  }
+  return list;
+}
+
+// ============================================================
+// DOCX GENERATION
+// ============================================================
+function generateDocx() {
+  if (typeof docx === 'undefined') {
+    showToast('Word biblioteka dar nepasikrovė. Pabandykite po kelių sekundžių.', 'error');
+    return;
+  }
+  try {
+    const data = gatherFormData();
+    if (!data.fields.pirkimoPavadinimas) {
+      if (!confirm('Pirkimo pavadinimas neužpildytas. Vis tiek generuoti Word dokumentą?')) return;
+    }
+    showToast('Generuojamas Word dokumentas...', 'info');
+    setTimeout(() => buildDocx(data), 50);
+  } catch (e) {
+    console.error(e);
+    showToast('Klaida: ' + e.message, 'error');
+  }
+}
+
+// Helper functions for docx
+function txt(text, opts = {}) {
+  return new docx.TextRun({ text: String(text || ''), ...opts });
+}
+
+function par(children, opts = {}) {
+  return new docx.Paragraph({
+    children: Array.isArray(children) ? children : [children],
+    spacing: { before: 0, after: 80 },
+    ...opts
+  });
+}
+
+function emptyPar() {
+  return new docx.Paragraph({ children: [new docx.TextRun('')] });
+}
+
+function cell(content, opts = {}) {
+  let children;
+  if (Array.isArray(content)) {
+    children = content.every(c => c instanceof docx.Paragraph) ? content :
+      [par(content)];
+  } else if (content instanceof docx.Paragraph) {
+    children = [content];
+  } else if (typeof content === 'string') {
+    children = [par([txt(content)])];
+  } else {
+    children = [par([content])];
+  }
+  return new docx.TableCell({
+    children,
+    width: opts.width,
+    columnSpan: opts.colSpan,
+    rowSpan: opts.rowSpan,
+    shading: opts.shading,
+    verticalAlign: opts.verticalAlign || docx.VerticalAlign.TOP,
+    margins: { top: 60, bottom: 60, left: 100, right: 100 }
+  });
+}
+
+function checkbox(checked) {
+  return checked ? '☒' : '☐';
+}
+
+function sectionTitleRow(text) {
+  return new docx.TableRow({
+    children: [cell(
+      par([txt(text, { bold: true })]),
+      { colSpan: 4, shading: { fill: 'E5E7EB' } }
+    )],
+  });
+}
+
+async function buildDocx(data) {
+  try {
+    const f = data.fields;
+    const r = data.radios;
+    const formNum = data.formNum;
+
+    const {
+      Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+      AlignmentType, BorderStyle, WidthType, HeadingLevel, VerticalAlign,
+      PageOrientation, LevelFormat, Header, ImageRun
+    } = docx;
+
+    // ---- Logo: decode base64 -> Uint8Array ----
+    function base64ToUint8Array(b64) {
+      const binStr = atob(b64);
+      const len = binStr.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) bytes[i] = binStr.charCodeAt(i);
+      return bytes;
+    }
+    const logoBytes = base64ToUint8Array(LITGRID_LOGO_BASE64);
+
+    // Word page header with Litgrid logo (left-aligned, ~150x40 px)
+    const pageHeader = new Header({
+      children: [
+        new Paragraph({
+          alignment: AlignmentType.LEFT,
+          children: [
+            new ImageRun({
+              data: logoBytes,
+              transformation: { width: 150, height: 40 }
+            })
+          ]
+        })
+      ]
+    });
+
+    // ---- Document header (title block) ----
+    const titlePar = new Paragraph({
+      alignment: AlignmentType.CENTER,
+      children: [new TextRun({ text: 'TIEKĖJŲ APKLAUSOS PAŽYMA', bold: true, size: 24 })],
+      spacing: { after: 100 }
+    });
+    const datePar = new Paragraph({
+      alignment: AlignmentType.CENTER,
+      children: [new TextRun({ text: formatDocDate(f.docDate) + ' Nr. ' + (f.docNr || '____'), size: 22 })],
+      spacing: { after: 80 }
+    });
+    const cityPar = new Paragraph({
+      alignment: AlignmentType.CENTER,
+      children: [new TextRun({ text: 'Vilnius', size: 22 })],
+      spacing: { after: 200 }
+    });
+
+    // ---- Build main table ----
+    const rows = [];
+
+    // ===== Section 1 + 2 header row =====
+    rows.push(new TableRow({
+      children: [
+        cell(par([txt('1. INFORMACIJA APIE PIRKIMO OBJEKTĄ', { bold: true, size: 18 })]),
+          { colSpan: 2, shading: { fill: 'F3F4F6' } }),
+        cell(par([txt('2. PIRKIMO INICIATORIUS / ORGANIZATORIUS', { bold: true, size: 18 })]),
+          { colSpan: 2, shading: { fill: 'F3F4F6' } })
+      ]
+    }));
+
+    // Section 1+2 content row
+    const s1Children = [];
+    s1Children.push(par([txt('Pirkimo pavadinimas: ', { bold: true }), txt((f.pirkimoPavadinimas || '____') + ' (toliau – Pirkimas).')]));
+    if (formNum === 2 && (f.korteleNr || f.korteleData)) {
+      s1Children.push(par([txt('Pirkimo kortelės registravimo data ir Nr.: ', { bold: true }),
+        txt(formatDocDate(f.korteleData) + ', Nr. ' + (f.korteleNr || '____'))]));
+    }
+    s1Children.push(par([txt('Numatoma Pirkimo vertė: ', { bold: true })]));
+    s1Children.push(par([txt((f.verteBePvm || '____') + ' Eur be PVM; ' + (f.verteSuPvm || '____') + ' Eur su PVM.')]));
+
+    if (formNum === 2 && r.skaidoma === 'taip') {
+      s1Children.push(par([txt('☒ Pirkimo objektas skaidomas į dalis:')]));
+      (data.rows.dalys || []).forEach((d, i) => {
+        s1Children.push(par([txt(`${i+1} dalis: ${d.dalisPav || '____'} - ${d.dalisBePvm || '____'} EUR be PVM; ${d.dalisSuPvm || '____'} EUR su PVM.`)]));
+      });
+    } else {
+      s1Children.push(par([txt('☒ Pirkimo objektas neskaidomas į dalis.')]));
+    }
+    s1Children.push(par([txt('Pirkimo objektas nėra įtrauktas į CPO katalogą.')]));
+
+    const s2Children = [];
+    if (formNum === 2) {
+      s2Children.push(par([txt('Iniciatorius:', { bold: true })]));
+      const iniStr = [f.iniPadalinys, f.iniPareigos, f.iniVardas].filter(Boolean).join(', ');
+      s2Children.push(par([txt(iniStr || '[padalinio pavadinimas, pareigos, vardas, pavardė].')]));
+      s2Children.push(par([txt('Organizatorius:', { bold: true })]));
+      const orgStr = [f.orgPareigos, f.orgVardas].filter(Boolean).join(', ');
+      s2Children.push(par([txt(orgStr || '[pareigos, vardas, pavardė].')]));
+    } else {
+      s2Children.push(par([txt('Iniciatorius/Organizatorius:', { bold: true })]));
+      const iniStr = [f.iniPadalinys, f.iniPareigos, f.iniVardas].filter(Boolean).join(', ');
+      s2Children.push(par([txt(iniStr || '[padalinio pavadinimas, pareigos, vardas, pavardė].')]));
+    }
+
+    rows.push(new TableRow({
+      children: [
+        cell(s1Children, { colSpan: 2 }),
+        cell(s2Children, { colSpan: 2 })
+      ]
+    }));
+
+    // ===== Section 3 =====
+    rows.push(sectionTitleRow('3. PIRKIMO PROCEDŪRŲ REGLAMENTAVIMAS'));
+    const s3Children = [];
+    s3Children.push(par([
+      txt('Pirkimas vykdomas vadovaujantis: ', { bold: true }),
+      txt('LITGRID AB mažos vertės pirkimų tvarkos aprašo (aktuali redakcija Pirkimo paskelbimo dieną) (toliau – Aprašas) nuostatomis.')
+    ]));
+    s3Children.push(par([txt('Pirkimo vertė: ', { bold: true }), txt('Mažos vertės pirkimas.')]));
+    s3Children.push(par([txt('Pirkimo būdas: ', { bold: true }), txt(f.pirkimoBudas || '____')]));
+    s3Children.push(par([txt('Vertinimo kriterijus: ', { bold: true }), txt(f.vertinimoKriterijus || (formNum === 1 ? 'Kaina' : '____'))]));
+    s3Children.push(par([txt('Derybos: ', { bold: true }), txt(r.derybos || 'Nevykdomos')]));
+
+    let atlText = r.atliekamas || '____';
+    if (formNum === 2 && r.atliekamas === 'CVP IS' && f.cvpisNr) {
+      atlText = `CVP IS priemonėmis (CVP IS Nr. ${f.cvpisNr})`;
+    }
+    s3Children.push(par([txt('Pirkimas atliekamas: ', { bold: true }), txt(atlText)]));
+    s3Children.push(par([txt('Pašalinimo pagrindų nebuvimo ir tiekėjų kvalifikacijos reikalavimai:', { bold: true })]));
+    s3Children.push(par([txt(checkbox(f.pasalKvalNetikrinama) + ' Tiekėjų pašalinimo pagrindų nebuvimas ir kvalifikacija nėra tikrinama')]));
+    s3Children.push(par([txt(checkbox(f.pasalTikrinamas) + ' Tiekėjų pašalinimo pagrindų nebuvimas yra tikrinamas')]));
+    s3Children.push(par([txt(checkbox(f.kvalTikrinama) + ' Tiekėjų kvalifikacija yra tikrinama')]));
+    s3Children.push(par([txt(checkbox(f.kvalNetikrinama) + ' Tiekėjų kvalifikacija nėra tikrinama')]));
+
+    rows.push(new TableRow({
+      children: [cell(s3Children, { colSpan: 4 })]
+    }));
+
+    // ===== Section 4 =====
+    rows.push(sectionTitleRow('4. PIRKIMO PROCEDŪRŲ EIGA'));
+
+    const s4Children = [];
+    if (f.pirkimoBudas && f.pirkimoBudas.toLowerCase().includes('neskelbiama')) {
+      s4Children.push(par([
+        txt('Tiekėjai, kviesti pateikti pasiūlymus: ', { bold: true }),
+        txt(`${f.kviestaSkaicius || '__'} tiekėjas (-ai): ${f.kviestiTiekejai || '____'}.`)
+      ]));
+      s4Children.push(par([
+        txt('Pagrindas, kuriuo vadovaujantis atliekama neskelbiama apklausa: ', { bold: true }),
+        txt(`Aprašo ${f.aprasoPagrindas || '____'} p.`)
+      ]));
+    }
+    s4Children.push(par([txt('Gauti pasiūlymai (surašyti ekonominio naudingumo mažėjimo (kainos didėjimo) tvarka):',
+      { bold: true })]));
+
+    rows.push(new TableRow({ children: [cell(s4Children, { colSpan: 4 })] }));
+
+    // ===== Lentelė 1: Pasiūlymai =====
+    rows.push(buildPasiulymaiLentele(data, 4));
+
+    // ===== Form 2: Galutiniai derybose =====
+    if (formNum === 2 && r.derybos === 'Vykdomos' && (data.rows.galutiniai || []).length > 0) {
+      rows.push(new TableRow({
+        children: [cell(par([txt('2 lentelė. Gauti galutiniai pasiūlymai ir pasiūlymų vertinimas:',
+          { bold: true, italics: true })]), { colSpan: 4 })]
+      }));
+      rows.push(buildGalutiniaiLentele(data, 4));
+    }
+
+    // ===== Form 1: Nat saugumas =====
+    if (formNum === 1) {
+      const ns = r.natSaug === 'Taip' ? 'Taip' : 'Ne';
+      rows.push(new TableRow({
+        children: [cell([
+          par([txt('2 lentelė. Atitikimas nacionalinio saugumo reikalavimams:', { bold: true, italics: true })]),
+          par([txt(`Ar Tiekėjui suteikiama prieiga ar pirkimo objektas apima BVPŽ kodų sąraše nurodytas prekes ar paslaugas? ${ns === 'Taip' ? '☒ Taip ☐ Ne' : '☐ Taip ☒ Ne'}`)])
+        ], { colSpan: 4 })]
+      }));
+      if (r.natSaug === 'Taip') {
+        rows.push(buildNatSaugLentele(data, 4));
+      }
+    }
+
+    // ===== Form 2: Galimo laimėtojo kvalifikacija =====
+    if (formNum === 2 && f.kvalifTiekejas) {
+      const kv = f.kvalifVertinimas;
+      const ki = f.kitiVertinimas;
+      rows.push(new TableRow({
+        children: [cell([
+          par([txt('Galimu laimėtoju pripažintinas:', { bold: true }), txt(' ' + (f.galimasLaimetojas || '____'))]),
+          par([txt('Informacija apie galimo laimėtojo pašalinimo pagrindų nebuvimo, kvalifikacijos ir kitų dokumentų vertinimo rezultatus:',
+            { bold: true })]),
+          par([txt(`Tiekėjas: ${f.kvalifTiekejas} | Kvalifikacija: ${kv || '__'} | Kiti reikalavimai: ${ki || '__'} | Pastabos: ${f.kvalifPastabos || '-'}`)])
+        ], { colSpan: 4 })]
+      }));
+    }
+
+    // ===== Section 5 =====
+    if (f.kitaInfo) {
+      rows.push(sectionTitleRow('5. KITA INFORMACIJA'));
+      const kitaParas = String(f.kitaInfo).split('\n').map(line => par([txt(line)]));
+      rows.push(new TableRow({ children: [cell(kitaParas, { colSpan: 4 })] }));
+    }
+
+    // ===== Section 6: SPRENDIMAI =====
+    rows.push(sectionTitleRow('6. SPRENDIMAI'));
+    const sprendimai = generateSprendimai(data);
+    const sprendChildren = sprendimai.length > 0
+      ? sprendimai.map((s, i) => {
+          const lines = String(s).split('\n');
+          if (lines.length === 1) return par([txt(`${i+1}. ${s}`)]);
+          const result = [par([txt(`${i+1}. ${lines[0]}`)])];
+          for (let j = 1; j < lines.length; j++) result.push(par([txt('   ' + lines[j])]));
+          return result;
+        }).flat()
+      : [par([txt('Sprendimai dar nepasirinkti.', { italics: true })])];
+    rows.push(new TableRow({ children: [cell(sprendChildren, { colSpan: 4 })] }));
+
+    // ===== Section 7 =====
+    rows.push(sectionTitleRow('7. SUTARTIES NUOSTATOS'));
+    const s7Children = [];
+    s7Children.push(par([
+      txt('Sutarties kaina: ', { bold: true }),
+      txt(`${f.sutartiesBePvm || '____'} Eur be PVM, t. y. ${f.sutartiesSuPvm || '____'} Eur su PVM.`)
+    ]));
+    if (formNum === 2) {
+      if (r.kainosTipas === 'specialios') s7Children.push(par([txt('☒ lygi sumai, nurodytai Sutarties Specialiosiose sąlygose.')]));
+      else if (r.kainosTipas === 'kita') s7Children.push(par([txt('☒ kita: ' + (f.kainosKita || ''))]));
+      else s7Children.push(par([txt('☒ lygi laimėjusio pasiūlymo kainai.')]));
+      s7Children.push(par([txt('Sutartis sudaroma raštu.', { bold: true })]));
+    } else {
+      if (f.kainaLygiLaimejusio) s7Children.push(par([txt('☒ lygi laimėjusio pasiūlymo kainai.')]));
+      const sudaroma = r.sutartisRastu === 'Žodžiu' ? '☒ žodžiu / ☐ raštu' : '☐ žodžiu / ☒ raštu';
+      s7Children.push(par([txt('Sutartis sudaroma: ', { bold: true }), txt(sudaroma)]));
+      if (r.sutartisRastu === 'Žodžiu') {
+        s7Children.push(par([txt('Pildoma tik tuo atveju, jei sutartis sudaroma žodžiu:', { italics: true })]));
+        const isankst = r.apmokejimasTipas === 'isankst';
+        if (isankst) {
+          s7Children.push(par([txt(`Taikomas išankstinis apmokėjimas – per ${f.apmokTerminas || '__'} kalendorinių dienų nuo išankstinio apmokėjimo sąskaitos gavimo dienos.`)]));
+        } else {
+          s7Children.push(par([
+            txt('Apmokėjimo terminas: ', { bold: true }),
+            txt(`${f.apmokTerminas || '__'} kalendorinių dienų nuo PVM sąskaitos faktūros ar kito tipo priklausančio išrašyti apmokėjimo dokumento gavimo dienos.`)
+          ]));
+        }
+      }
+    }
+    rows.push(new TableRow({ children: [cell(s7Children, { colSpan: 4 })] }));
+
+    // ===== Section 8 =====
+    rows.push(sectionTitleRow('8. PRIEDAI'));
+    const s8Children = [];
+    s8Children.push(par([txt(checkbox(f.priedasSalygos) + ' 1 priedas. Pirkimo sąlygos.')]));
+    s8Children.push(par([txt(checkbox(f.priedasLaimejes) + ' 2 priedas. Laimėjęs pasiūlymas.')]));
+    s8Children.push(par([txt(checkbox(f.priedasPasiulymai) + ' 3 priedas. Tiekėjų pasiūlymai.')]));
+    s8Children.push(par([txt(checkbox(f.priedasEkspertu) + ' 4 priedas. Ekspertų išvada (-os).')]));
+    s8Children.push(par([txt(checkbox(f.priedasKita) + ' 5 priedas. ' + (f.priedasKitaTekstas || '[nurodomi kiti dokumentai]'))]));
+    rows.push(new TableRow({ children: [cell(s8Children, { colSpan: 4 })] }));
+
+    // Tvirtina
+    rows.push(new TableRow({
+      children: [
+        cell(par([txt(formNum === 2 ? 'Tvirtina:' : 'Patvirtinta:', { bold: true })]), { colSpan: 2 }),
+        cell(par([txt(f.tvirtintojas || '____', { italics: true })]), { colSpan: 2 })
+      ]
+    }));
+
+    const mainTable = new Table({
+      rows,
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      columnWidths: [2400, 2400, 2400, 2400]
+    });
+
+    // ---- Document ----
+    const doc = new Document({
+      creator: 'LITGRID AB Pirkimo pažymos įrankis',
+      title: 'Tiekėjų apklausos pažyma',
+      styles: {
+        default: {
+          document: { run: { font: 'Times New Roman', size: 22 } }
+        }
+      },
+      sections: [{
+        properties: {
+          page: {
+            margin: { top: 1400, right: 1000, bottom: 1000, left: 1000 }
+          }
+        },
+        headers: { default: pageHeader },
+        children: [titlePar, datePar, cityPar, mainTable]
+      }]
+    });
+
+    const blob = await Packer.toBlob(doc);
+    const filename = makeFilename(f);
+    saveAs(blob, filename);
+    showToast('Word dokumentas sugeneruotas: ' + filename, 'success');
+  } catch (e) {
+    console.error(e);
+    showToast('Klaida generuojant Word: ' + e.message, 'error');
+  }
+}
+
+function makeFilename(f) {
+  let name = 'Pirkimo_pazyma';
+  if (f.docNr) name += '_' + f.docNr.replace(/[^a-zA-Z0-9-_]/g, '_');
+  if (f.pirkimoPavadinimas) {
+    let pav = f.pirkimoPavadinimas.substring(0, 40)
+      .replace(/[^a-zA-Z0-9ąčęėįšųūžĄČĘĖĮŠŲŪŽ -]/g, '')
+      .replace(/\s+/g, '_');
+    name += '_' + pav;
+  }
+  return name + '.docx';
+}
+
+function buildPasiulymaiLentele(data, totalCols) {
+  const formNum = data.formNum;
+  const headerCells = [
+    cell(par([txt('Eil. Nr.', { bold: true, size: 18 })]), { shading: { fill: 'F3F4F6' } }),
+    cell(par([txt('Tiekėjo pavadinimas', { bold: true, size: 18 })]), { shading: { fill: 'F3F4F6' } }),
+    cell(par([txt('Pasiūlymo kaina (be PVM / su PVM)', { bold: true, size: 18 })]), { shading: { fill: 'F3F4F6' } }),
+    cell(par([txt('Pasiūlymo vertinimas', { bold: true, size: 18 })]), { shading: { fill: 'F3F4F6' } }),
+  ];
+  if (formNum === 1) {
+    headerCells.push(cell(par([txt('Kiti reikalavimai', { bold: true, size: 18 })]), { shading: { fill: 'F3F4F6' } }));
+  }
+  headerCells.push(cell(par([txt('Neatitikimo aprašymas', { bold: true, size: 18 })]), { shading: { fill: 'F3F4F6' } }));
+
+  const rows = [new docx.TableRow({ children: headerCells, tableHeader: true })];
+
+  const items = data.rows.pasiulymai || [];
+  if (items.length === 0) {
+    const colSpan = formNum === 1 ? 6 : 5;
+    rows.push(new docx.TableRow({
+      children: [cell(par([txt('(nepateikti pasiūlymai)', { italics: true })]), { colSpan })]
+    }));
+  } else {
+    items.forEach((p, i) => {
+      const cells = [
+        cell(par([txt(String(i+1))])),
+        cell(par([txt(p.tiekejas || '')])),
+        cell(par([txt(`${p.kainaBePvm || ''} / ${p.kainaSuPvm || ''}`)])),
+        cell(par([txt(p.pasiulVert ? `${p.pasiulVert === 'Atitinka' ? '☒' : '☐'} Atitinka  ${p.pasiulVert === 'Neatitinka' ? '☒' : '☐'} Neatitinka` : '☐ Atitinka  ☐ Neatitinka')])),
+      ];
+      if (formNum === 1) {
+        cells.push(cell(par([txt(p.kitiVert ? `${p.kitiVert === 'Atitinka' ? '☒' : '☐'} Atitinka  ${p.kitiVert === 'Neatitinka' ? '☒' : '☐'} Neatitinka` : '☐ Atitinka  ☐ Neatitinka')])));
+      }
+      cells.push(cell(par([txt(p.neatitikimas || '')])));
+      rows.push(new docx.TableRow({ children: cells }));
+    });
+  }
+
+  // Wrap table inside parent cell spanning all columns
+  const innerTable = new docx.Table({
+    rows,
+    width: { size: 100, type: docx.WidthType.PERCENTAGE }
+  });
+  return new docx.TableRow({ children: [cell([innerTable], { colSpan: totalCols })] });
+}
+
+function buildGalutiniaiLentele(data, totalCols) {
+  const headerCells = [
+    cell(par([txt('Eil. Nr.', { bold: true, size: 18 })]), { shading: { fill: 'F3F4F6' } }),
+    cell(par([txt('Tiekėjo pavadinimas', { bold: true, size: 18 })]), { shading: { fill: 'F3F4F6' } }),
+    cell(par([txt('Galutinio pasiūlymo kaina (be / su PVM)', { bold: true, size: 18 })]), { shading: { fill: 'F3F4F6' } }),
+    cell(par([txt('Vertinimas', { bold: true, size: 18 })]), { shading: { fill: 'F3F4F6' } }),
+    cell(par([txt('Neatitikimo aprašymas', { bold: true, size: 18 })]), { shading: { fill: 'F3F4F6' } }),
+  ];
+  const rows = [new docx.TableRow({ children: headerCells, tableHeader: true })];
+  (data.rows.galutiniai || []).forEach((p, i) => {
+    const cells = [
+      cell(par([txt(String(i+1))])),
+      cell(par([txt(p.tiekejas || '')])),
+      cell(par([txt(`${p.galKainaBePvm || ''} / ${p.galKainaSuPvm || ''}`)])),
+      cell(par([txt(p.galVert ? `${p.galVert === 'Atitinka' ? '☒' : '☐'} Atitinka  ${p.galVert === 'Neatitinka' ? '☒' : '☐'} Neatitinka` : '☐ Atitinka  ☐ Neatitinka')])),
+      cell(par([txt(p.galNeatitikimas || '')])),
+    ];
+    rows.push(new docx.TableRow({ children: cells }));
+  });
+  const innerTable = new docx.Table({ rows, width: { size: 100, type: docx.WidthType.PERCENTAGE } });
+  return new docx.TableRow({ children: [cell([innerTable], { colSpan: totalCols })] });
+}
+
+function buildNatSaugLentele(data, totalCols) {
+  const headerCells = [
+    cell(par([txt('Eil. Nr.', { bold: true, size: 18 })]), { shading: { fill: 'F3F4F6' } }),
+    cell(par([txt('Tiekėjo pavadinimas', { bold: true, size: 18 })]), { shading: { fill: 'F3F4F6' } }),
+    cell(par([txt('Pateikė dokumentus (52 str. 3d. / 51 str. 12d.)', { bold: true, size: 18 })]), { shading: { fill: 'F3F4F6' } }),
+    cell(par([txt('Neregistruoti rizikinguose sąrašuose', { bold: true, size: 18 })]), { shading: { fill: 'F3F4F6' } }),
+    cell(par([txt('Pastabos', { bold: true, size: 18 })]), { shading: { fill: 'F3F4F6' } }),
+  ];
+  const rows = [new docx.TableRow({ children: headerCells, tableHeader: true })];
+  (data.rows.natSaug || []).forEach((n, i) => {
+    rows.push(new docx.TableRow({ children: [
+      cell(par([txt(String(i+1))])),
+      cell(par([txt(n.natTiekejas || '')])),
+      cell(par([txt(n.natDok ? `${n.natDok === 'Taip' ? '☒' : '☐'} Taip  ${n.natDok === 'Ne' ? '☒' : '☐'} Ne` : '☐ Taip  ☐ Ne')])),
+      cell(par([txt(n.natRiziking ? `${n.natRiziking === 'Taip' ? '☒' : '☐'} Taip  ${n.natRiziking === 'Ne' ? '☒' : '☐'} Ne` : '☐ Taip  ☐ Ne')])),
+      cell(par([txt(n.natPastabos || '')])),
+    ]}));
+  });
+  const innerTable = new docx.Table({ rows, width: { size: 100, type: docx.WidthType.PERCENTAGE } });
+  return new docx.TableRow({ children: [cell([innerTable], { colSpan: totalCols })] });
+}
+
+// Modal helpers
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+// Toast
+function showToast(message, type = '') {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.className = 'toast ' + type;
+  setTimeout(() => toast.classList.add('show'), 10);
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+</script>
+</body>
+</html>
