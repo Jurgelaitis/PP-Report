@@ -641,9 +641,41 @@
 <!-- TOAST -->
 <div id="toast" class="toast"></div>
 
-<!-- DOCX library -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<!-- DOCX library su fallback CDN -->
+<script>
+  // Bibliotekas užkraunam su fallback į kitus CDN, jei vienas neveikia
+  function loadScriptWithFallback(urls, onload) {
+    let i = 0;
+    function tryNext() {
+      if (i >= urls.length) {
+        console.error('Visi CDN kelio variantai nepavyko:', urls);
+        return;
+      }
+      const s = document.createElement('script');
+      s.src = urls[i];
+      s.onload = onload;
+      s.onerror = () => {
+        console.warn('CDN nepavyko:', urls[i]);
+        i++;
+        tryNext();
+      };
+      document.head.appendChild(s);
+    }
+    tryNext();
+  }
+  // docx biblioteka
+  loadScriptWithFallback([
+    'https://unpkg.com/docx@8.5.0/build/index.umd.js',
+    'https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.js'
+  ], () => console.log('docx biblioteka užkrauta'));
+  // FileSaver
+  loadScriptWithFallback([
+    'https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js',
+    'https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js'
+  ], () => console.log('FileSaver užkrautas'));
+</script>
 
 <script>
 // ============================================================
@@ -826,12 +858,13 @@ function renderSection1(formNum) {
           ${formTwoExtras}
           <div class="field">
             <label>Numatoma vertė be PVM (Eur) <span class="req">*</span></label>
-            <input type="number" id="verte-be-pvm" data-field="verteBePvm" step="0.01" placeholder="0.00" oninput="validateValue()">
+            <input type="number" id="verte-be-pvm" data-field="verteBePvm" step="0.01" placeholder="0.00" oninput="calcPvm(this); validateValue();">
             <div id="value-warning" class="hint" style="color:#dc2626; display:none;"></div>
           </div>
           <div class="field">
             <label>Numatoma vertė su PVM (Eur) <span class="req">*</span></label>
-            <input type="number" id="verte-su-pvm" data-field="verteSuPvm" step="0.01" placeholder="0.00">
+            <input type="number" id="verte-su-pvm" data-field="verteSuPvm" step="0.01" placeholder="0.00" oninput="calcPvm(this);">
+            <div class="hint">Auto: ×1.21 (21% PVM)</div>
           </div>
           ${splitOption}
           <div class="field full-row">
@@ -986,7 +1019,8 @@ function renderSection3(formNum) {
 function renderSection4(formNum) {
   const apraso29Options = APRASO_29_PUNKTAI.map(p => `<option value="${p.value}">${p.label}</option>`).join('');
 
-  const derybUI = formNum === 2 ? `
+  // Galutinių pasiūlymų sekcija - rodoma kai derybos=Vykdomos (abiems formoms)
+  const derybUI = `
     <div id="derybos-section" class="conditional" style="margin-top:16px;">
       <h4 style="font-size:13px; margin:16px 0 8px; color:#003a70;">Derybų informacija</h4>
       <div class="field full-row">
@@ -998,14 +1032,18 @@ function renderSection4(formNum) {
           <label><input type="checkbox" data-field="derybElpas"> El. paštu</label>
         </div>
       </div>
-      <h5 style="font-size:12px; margin:12px 0 6px;">2 lentelė. Galutiniai pasiūlymai</h5>
+      <h5 style="font-size:12px; margin:12px 0 6px;">2 lentelė. Gauti galutiniai pasiūlymai</h5>
+      <div class="helper-box info">
+        Jeigu tiekėjas nepateikė galutinio pasiūlymo - pažymėkite langelį, ir jo pirminis pasiūlymas bus laikomas galutiniu (kainos perimamos automatiškai).
+      </div>
       <table class="data-table" id="galutiniai-table">
         <thead>
           <tr>
             <th style="width:40px;">Nr.</th>
             <th>Tiekėjo pavadinimas</th>
-            <th style="width:140px;">Galutinė kaina be PVM</th>
-            <th style="width:140px;">Galutinė kaina su PVM</th>
+            <th style="width:130px;">Nepateikė galut. pas.<br><span style="font-weight:normal;font-size:10px;">(pirminis = galutinis)</span></th>
+            <th style="width:130px;">Galutinė kaina be PVM</th>
+            <th style="width:130px;">Galutinė kaina su PVM</th>
             <th style="width:90px;">Vertinimas</th>
             <th>Neatitikimas</th>
             <th style="width:60px;"></th>
@@ -1014,7 +1052,7 @@ function renderSection4(formNum) {
         <tbody id="galutiniai-tbody"></tbody>
       </table>
       <button type="button" class="add-row-btn" onclick="addGalutinisRow()">+ Pridėti galutinį pasiūlymą</button>
-    </div>
+    </div>` + (formNum === 2 ? `
 
     <h4 style="font-size:13px; margin:20px 0 8px; color:#003a70;">Galimo laimėtojo kvalifikacijos vertinimas</h4>
     <div class="field full-row">
@@ -1053,7 +1091,7 @@ function renderSection4(formNum) {
         </tr>
       </tbody>
     </table>
-  ` : '';
+  ` : '');
 
   return `
     <div class="section" data-section="4">
@@ -1083,7 +1121,7 @@ function renderSection4(formNum) {
           </div>
         </div>
 
-        <h4 style="font-size:13px; margin:16px 0 8px; color:#003a70;">1 lentelė. Gauti pasiūlymai</h4>
+        <h4 id="pasiulymu-heading" style="font-size:13px; margin:16px 0 8px; color:#003a70;">1 lentelė. Gauti pasiūlymai</h4>
         <div class="helper-box info">
           Surašyti ekonominio naudingumo mažėjimo (kainos didėjimo) tvarka.
         </div>
@@ -1253,11 +1291,12 @@ function renderSection7(formNum) {
         <div class="field-grid">
           <div class="field">
             <label>Sutarties kaina be PVM (Eur)</label>
-            <input type="number" id="sutarties-be-pvm" data-field="sutartiesBePvm" step="0.01">
+            <input type="number" id="sutarties-be-pvm" data-field="sutartiesBePvm" step="0.01" oninput="calcPvm(this);">
           </div>
           <div class="field">
             <label>Sutarties kaina su PVM (Eur)</label>
-            <input type="number" id="sutarties-su-pvm" data-field="sutartiesSuPvm" step="0.01">
+            <input type="number" id="sutarties-su-pvm" data-field="sutartiesSuPvm" step="0.01" oninput="calcPvm(this);">
+            <div class="hint">Auto: ×1.21 (21% PVM)</div>
           </div>
           ${kainaTaisykles}
           ${sutartiesType}
@@ -1380,6 +1419,13 @@ function toggleCvpIs(radio) {
 function toggleDerybos(radio) {
   const section = document.getElementById('derybos-section');
   if (section) section.classList.toggle('show', radio.value === 'Vykdomos');
+  // Atnaujinam 1 lentelės pavadinimą - jei vyksta derybos, vadinama "Pirminiai"
+  const heading = document.getElementById('pasiulymu-heading');
+  if (heading) {
+    heading.textContent = radio.value === 'Vykdomos'
+      ? '1 lentelė. Gauti pirminiai pasiūlymai'
+      : '1 lentelė. Gauti pasiūlymai';
+  }
 }
 
 function toggleNatSaug(radio) {
@@ -1433,6 +1479,55 @@ function onScenarijusChange() {
 }
 
 // ============================================================
+// PVM SKAIČIAVIMAS (Lietuva: 21%)
+// ============================================================
+const PVM_TARIFAS = 0.21;
+
+// Skaičiuoja vertę su PVM iš vertės be PVM, arba atvirkščiai
+function calcPvm(input) {
+  const value = parseFloat(input.value);
+  if (isNaN(value)) {
+    return;
+  }
+
+  const fieldName = input.dataset.field || '';
+  let targetFieldName = '';
+  let isReverse = false;
+
+  if (fieldName.endsWith('BePvm')) {
+    targetFieldName = fieldName.replace(/BePvm$/, 'SuPvm');
+  } else if (fieldName.endsWith('SuPvm')) {
+    targetFieldName = fieldName.replace(/SuPvm$/, 'BePvm');
+    isReverse = true;
+  } else {
+    return;
+  }
+
+  // Tikslinis laukas: pirma ieškom toje pačioje lentelės eilutėje, jei jos nėra - bet kuris ne lentelėje
+  let target = null;
+  const tr = input.closest('tr');
+  if (tr) {
+    target = tr.querySelector('[data-field="' + targetFieldName + '"]');
+  } else {
+    // Top-level laukas: ieškom visų ir pasirenkam tą, kuris NĖRA lentelėje
+    const allMatching = document.querySelectorAll('[data-field="' + targetFieldName + '"]');
+    for (let i = 0; i < allMatching.length; i++) {
+      if (!allMatching[i].closest('tbody')) {
+        target = allMatching[i];
+        break;
+      }
+    }
+    // Fallback - jei nieko nerasta, paimam pirmą
+    if (!target && allMatching.length > 0) target = allMatching[0];
+  }
+
+  if (target) {
+    const result = isReverse ? value / (1 + PVM_TARIFAS) : value * (1 + PVM_TARIFAS);
+    target.value = result.toFixed(2);
+  }
+}
+
+// ============================================================
 // VALIDATION
 // ============================================================
 function validateValue() {
@@ -1481,8 +1576,8 @@ function addPasiulymasRow() {
   tr.innerHTML = `
     <td style="text-align:center;">${num}</td>
     <td><input type="text" data-field="tiekejas" placeholder="Tiekėjo pavadinimas"></td>
-    <td><input type="number" data-field="kainaBePvm" step="0.01"></td>
-    <td><input type="number" data-field="kainaSuPvm" step="0.01"></td>
+    <td><input type="number" data-field="kainaBePvm" step="0.01" oninput="calcPvm(this)"></td>
+    <td><input type="number" data-field="kainaSuPvm" step="0.01" oninput="calcPvm(this)"></td>
     <td>
       <select data-field="pasiulVert">
         <option value="">--</option>
@@ -1504,9 +1599,12 @@ function addGalutinisRow() {
   const tr = document.createElement('tr');
   tr.innerHTML = `
     <td style="text-align:center;">${tbody.children.length + 1}</td>
-    <td><input type="text" data-field="tiekejas" placeholder="Tiekėjas"></td>
-    <td><input type="number" data-field="galKainaBePvm" step="0.01"></td>
-    <td><input type="number" data-field="galKainaSuPvm" step="0.01"></td>
+    <td><input type="text" data-field="tiekejas" placeholder="Tiekėjas" oninput="onGalutiniTiekejasChange(this)"></td>
+    <td style="text-align:center;">
+      <input type="checkbox" data-field="nepateikGalutinio" onchange="toggleNepateikGalutinio(this)" title="Nepateikė galutinio - pirminis laikomas galutiniu">
+    </td>
+    <td><input type="number" data-field="galKainaBePvm" step="0.01" oninput="calcPvm(this)"></td>
+    <td><input type="number" data-field="galKainaSuPvm" step="0.01" oninput="calcPvm(this)"></td>
     <td>
       <select data-field="galVert">
         <option value="">--</option>
@@ -1519,6 +1617,49 @@ function addGalutinisRow() {
   `;
   tbody.appendChild(tr);
   renumberTable('galutiniai-tbody');
+}
+
+// Pažymėjus "nepateikė galutinio" - perimam kainas iš pirminio pasiūlymo lentelės pagal tiekėjo pavadinimą
+function toggleNepateikGalutinio(checkbox) {
+  const tr = checkbox.closest('tr');
+  if (!tr) return;
+  const tiekejasInput = tr.querySelector('[data-field="tiekejas"]');
+  const beField = tr.querySelector('[data-field="galKainaBePvm"]');
+  const suField = tr.querySelector('[data-field="galKainaSuPvm"]');
+
+  if (checkbox.checked) {
+    // Bandom rasti atitinkamą tiekėją 1 lentelėje ir perimti kainas
+    const tiekejasName = (tiekejasInput?.value || '').trim().toLowerCase();
+    if (tiekejasName) {
+      const pasTbody = document.getElementById('pasiulymu-tbody');
+      if (pasTbody) {
+        for (const pasTr of pasTbody.children) {
+          const pasName = (pasTr.querySelector('[data-field="tiekejas"]')?.value || '').trim().toLowerCase();
+          if (pasName === tiekejasName) {
+            const pasBe = pasTr.querySelector('[data-field="kainaBePvm"]')?.value || '';
+            const pasSu = pasTr.querySelector('[data-field="kainaSuPvm"]')?.value || '';
+            if (beField) beField.value = pasBe;
+            if (suField) suField.value = pasSu;
+            break;
+          }
+        }
+      }
+    }
+    // Užtemdom kainos laukus, kad būtų aišku, jog automatiškai paimta
+    if (beField) { beField.readOnly = true; beField.style.background = '#f3f4f6'; }
+    if (suField) { suField.readOnly = true; suField.style.background = '#f3f4f6'; }
+  } else {
+    if (beField) { beField.readOnly = false; beField.style.background = ''; }
+    if (suField) { suField.readOnly = false; suField.style.background = ''; }
+  }
+}
+
+// Kai įrašomas tiekėjo pavadinimas - jei "nepateikė galutinio" pažymėtas, perimti naujas kainas
+function onGalutiniTiekejasChange(input) {
+  const tr = input.closest('tr');
+  if (!tr) return;
+  const cb = tr.querySelector('[data-field="nepateikGalutinio"]');
+  if (cb && cb.checked) toggleNepateikGalutinio(cb);
 }
 
 function addNatSaugRow() {
@@ -1556,8 +1697,8 @@ function addDalis() {
   tr.innerHTML = `
     <td style="text-align:center;">${tbody.children.length + 1}</td>
     <td><input type="text" data-field="dalisPav"></td>
-    <td><input type="number" data-field="dalisBePvm" step="0.01"></td>
-    <td><input type="number" data-field="dalisSuPvm" step="0.01"></td>
+    <td><input type="number" data-field="dalisBePvm" step="0.01" oninput="calcPvm(this)"></td>
+    <td><input type="number" data-field="dalisSuPvm" step="0.01" oninput="calcPvm(this)"></td>
     <td style="text-align:center;"><button type="button" class="btn-small btn-remove" onclick="removeRow(this)">✕</button></td>
   `;
   tbody.appendChild(tr);
@@ -1892,20 +2033,23 @@ function buildPreviewHtml(data) {
     html += `<strong>Tiekėjai, kviesti pateikti pasiūlymus:</strong> ${escapeHtml(f.kviestaSkaicius || '__')} tiekėjas (-ai): ${escapeHtml(f.kviestiTiekejai || '____')}.<br>`;
     html += `<strong>Pagrindas neskelbiamai apklausai:</strong> Aprašo ${escapeHtml(f.aprasoPagrindas || '____')} p.<br>`;
   }
-  // Lentelė 1
-  html += `<br><strong>1 lentelė. Gauti pasiūlymai:</strong>`;
+  // Lentelė 1 - dinamiškas pavadinimas pagal derybas
+  const isDeryb = r.derybos === 'Vykdomos';
+  const lent1Pav = isDeryb ? '1 lentelė. Gauti pirminiai pasiūlymai:' : '1 lentelė. Gauti pasiūlymai:';
+  html += `<br><strong>${lent1Pav}</strong>`;
   html += `<table style="margin-top:6px;"><tr><th>Nr.</th><th>Tiekėjas</th><th>Kaina be PVM</th><th>Kaina su PVM</th><th>Vertinimas</th>${formNum === 1 ? '<th>Kiti reikalavimai</th>' : ''}<th>Neatitikimas</th></tr>`;
   (data.rows.pasiulymai || []).forEach((p, i) => {
     html += `<tr><td>${i+1}</td><td>${escapeHtml(p.tiekejas || '')}</td><td>${escapeHtml(p.kainaBePvm || '')}</td><td>${escapeHtml(p.kainaSuPvm || '')}</td><td>${escapeHtml(p.pasiulVert || '')}</td>${formNum === 1 ? `<td>${escapeHtml(p.kitiVert || '')}</td>` : ''}<td>${escapeHtml(p.neatitikimas || '')}</td></tr>`;
   });
   html += `</table>`;
 
-  // Form 2 derybos lentelė
-  if (formNum === 2 && r.derybos === 'Vykdomos') {
-    html += `<br><strong>2 lentelė. Galutiniai pasiūlymai:</strong>`;
-    html += `<table><tr><th>Nr.</th><th>Tiekėjas</th><th>Galutinė kaina be PVM</th><th>Galutinė kaina su PVM</th><th>Vertinimas</th><th>Neatitikimas</th></tr>`;
+  // 2 lentelė - galutiniai pasiūlymai (abiems formoms, kai derybos=Vykdomos)
+  if (isDeryb) {
+    html += `<br><strong>2 lentelė. Gauti galutiniai pasiūlymai:</strong>`;
+    html += `<table><tr><th>Nr.</th><th>Tiekėjas</th><th>Galutinė kaina be PVM</th><th>Galutinė kaina su PVM</th><th>Vertinimas</th><th>Pastaba</th></tr>`;
     (data.rows.galutiniai || []).forEach((p, i) => {
-      html += `<tr><td>${i+1}</td><td>${escapeHtml(p.tiekejas || '')}</td><td>${escapeHtml(p.galKainaBePvm || '')}</td><td>${escapeHtml(p.galKainaSuPvm || '')}</td><td>${escapeHtml(p.galVert || '')}</td><td>${escapeHtml(p.galNeatitikimas || '')}</td></tr>`;
+      const nepate = p.nepateikGalutinio ? 'Nepateikė galutinio pasiūlymo - pirminis laikomas galutiniu' : (p.galNeatitikimas || '');
+      html += `<tr><td>${i+1}</td><td>${escapeHtml(p.tiekejas || '')}</td><td>${escapeHtml(p.galKainaBePvm || '')}</td><td>${escapeHtml(p.galKainaSuPvm || '')}</td><td>${escapeHtml(p.galVert || '')}</td><td>${escapeHtml(nepate)}</td></tr>`;
     });
     html += `</table>`;
   }
@@ -2028,8 +2172,20 @@ function generateSprendimai(data) {
 // DOCX GENERATION
 // ============================================================
 function generateDocx() {
-  if (typeof docx === 'undefined') {
-    showToast('Word biblioteka dar nepasikrovė. Pabandykite po kelių sekundžių.', 'error');
+  // Aktyviai laukiam, kol pasikraus biblioteka (max 10 sekundžių)
+  if (typeof docx === 'undefined' || typeof saveAs === 'undefined') {
+    showToast('Laukiama, kol pasikraus Word biblioteka...', 'info');
+    let attempts = 0;
+    const interval = setInterval(() => {
+      attempts++;
+      if (typeof docx !== 'undefined' && typeof saveAs !== 'undefined') {
+        clearInterval(interval);
+        generateDocx(); // pakartot
+      } else if (attempts > 20) { // 20 × 500ms = 10s
+        clearInterval(interval);
+        showToast('Nepavyko užkrauti Word bibliotekos. Patikrinkite interneto ryšį arba įmonės užkardos nustatymus (reikalingas priėjimas prie unpkg.com / jsdelivr / cdnjs).', 'error');
+      }
+    }, 500);
     return;
   }
   try {
@@ -2247,16 +2403,19 @@ async function buildDocx(data) {
         txt(`Aprašo ${f.aprasoPagrindas || '____'} p.`)
       ]));
     }
-    s4Children.push(par([txt('Gauti pasiūlymai (surašyti ekonominio naudingumo mažėjimo (kainos didėjimo) tvarka):',
-      { bold: true })]));
+    const isDerybVykdomos = r.derybos === 'Vykdomos';
+    const lent1Pavadinimas = isDerybVykdomos
+      ? '1 lentelė. Gauti pirminiai pasiūlymai (surašyti ekonominio naudingumo mažėjimo (kainos didėjimo) tvarka):'
+      : '1 lentelė. Gauti pasiūlymai (surašyti ekonominio naudingumo mažėjimo (kainos didėjimo) tvarka):';
+    s4Children.push(par([txt(lent1Pavadinimas, { bold: true })]));
 
     rows.push(new TableRow({ children: [cell(s4Children, { colSpan: 4 })] }));
 
     // ===== Lentelė 1: Pasiūlymai =====
     rows.push(buildPasiulymaiLentele(data, 4));
 
-    // ===== Form 2: Galutiniai derybose =====
-    if (formNum === 2 && r.derybos === 'Vykdomos' && (data.rows.galutiniai || []).length > 0) {
+    // ===== 2 lentelė: Galutiniai pasiūlymai (abiems formoms, kai derybos=Vykdomos) =====
+    if (isDerybVykdomos && (data.rows.galutiniai || []).length > 0) {
       rows.push(new TableRow({
         children: [cell(par([txt('2 lentelė. Gauti galutiniai pasiūlymai ir pasiūlymų vertinimas:',
           { bold: true, italics: true })]), { colSpan: 4 })]
@@ -2264,12 +2423,13 @@ async function buildDocx(data) {
       rows.push(buildGalutiniaiLentele(data, 4));
     }
 
-    // ===== Form 1: Nat saugumas =====
+    // ===== Form 1: Nat saugumas (numeracija pasislenka, jei rodomas derybų galutinių lentelė) =====
     if (formNum === 1) {
       const ns = r.natSaug === 'Taip' ? 'Taip' : 'Ne';
+      const nsBaseNum = isDerybVykdomos ? 3 : 2;
       rows.push(new TableRow({
         children: [cell([
-          par([txt('2 lentelė. Atitikimas nacionalinio saugumo reikalavimams:', { bold: true, italics: true })]),
+          par([txt(`${nsBaseNum} lentelė. Atitikimas nacionalinio saugumo reikalavimams:`, { bold: true, italics: true })]),
           par([txt(`Ar Tiekėjui suteikiama prieiga ar pirkimo objektas apima BVPŽ kodų sąraše nurodytas prekes ar paslaugas? ${ns === 'Taip' ? '☒ Taip ☐ Ne' : '☐ Taip ☒ Ne'}`)])
         ], { colSpan: 4 })]
       }));
@@ -2461,16 +2621,19 @@ function buildGalutiniaiLentele(data, totalCols) {
     cell(par([txt('Tiekėjo pavadinimas', { bold: true, size: 18 })]), { shading: { fill: 'F3F4F6' } }),
     cell(par([txt('Galutinio pasiūlymo kaina (be / su PVM)', { bold: true, size: 18 })]), { shading: { fill: 'F3F4F6' } }),
     cell(par([txt('Vertinimas', { bold: true, size: 18 })]), { shading: { fill: 'F3F4F6' } }),
-    cell(par([txt('Neatitikimo aprašymas', { bold: true, size: 18 })]), { shading: { fill: 'F3F4F6' } }),
+    cell(par([txt('Pastaba', { bold: true, size: 18 })]), { shading: { fill: 'F3F4F6' } }),
   ];
   const rows = [new docx.TableRow({ children: headerCells, tableHeader: true })];
   (data.rows.galutiniai || []).forEach((p, i) => {
+    const pastaba = p.nepateikGalutinio
+      ? 'Tiekėjas nepateikė galutinio pasiūlymo - pirminis pasiūlymas laikomas galutiniu'
+      : (p.galNeatitikimas || '');
     const cells = [
       cell(par([txt(String(i+1))])),
       cell(par([txt(p.tiekejas || '')])),
       cell(par([txt(`${p.galKainaBePvm || ''} / ${p.galKainaSuPvm || ''}`)])),
       cell(par([txt(p.galVert ? `${p.galVert === 'Atitinka' ? '☒' : '☐'} Atitinka  ${p.galVert === 'Neatitinka' ? '☒' : '☐'} Neatitinka` : '☐ Atitinka  ☐ Neatitinka')])),
-      cell(par([txt(p.galNeatitikimas || '')])),
+      cell(par([txt(pastaba)])),
     ];
     rows.push(new docx.TableRow({ children: cells }));
   });
