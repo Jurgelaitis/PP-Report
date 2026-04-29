@@ -1271,15 +1271,15 @@ function renderSection7(formNum) {
     <div class="field full-row">
       <label>Sutarties kainos pobūdis</label>
       <div class="checkbox-group">
-        <label><input type="radio" name="kainosTipas" value="laimejusi" checked> Lygi laimėjusio pasiūlymo kainai</label>
-        <label><input type="radio" name="kainosTipas" value="specialios"> Lygi sumai, nurodytai Sutarties Specialiosiose sąlygose</label>
-        <label><input type="radio" name="kainosTipas" value="kita"> Kita: <input type="text" id="kainosKita" data-field="kainosKita" style="display:inline-block;width:60%;margin-left:8px;"></label>
+        <label><input type="radio" name="kainosTipas" value="laimejusi" checked onchange="autoFillSutartiesKaina()"> Lygi laimėjusio pasiūlymo kainai (auto-pildoma)</label>
+        <label><input type="radio" name="kainosTipas" value="specialios" onchange="autoFillSutartiesKaina()"> Lygi sumai, nurodytai Sutarties Specialiosiose sąlygose</label>
+        <label><input type="radio" name="kainosTipas" value="kita" onchange="autoFillSutartiesKaina()"> Kita: <input type="text" id="kainosKita" data-field="kainosKita" style="display:inline-block;width:60%;margin-left:8px;"></label>
       </div>
     </div>
   ` : `
     <div class="field full-row">
       <div class="checkbox-group">
-        <label><input type="checkbox" data-field="kainaLygiLaimejusio" checked> Sutarties kaina lygi laimėjusio pasiūlymo kainai</label>
+        <label><input type="checkbox" data-field="kainaLygiLaimejusio" checked onchange="autoFillSutartiesKaina()"> Sutarties kaina lygi laimėjusio pasiūlymo kainai (auto-pildoma)</label>
       </div>
     </div>
   `;
@@ -1802,6 +1802,55 @@ function autoFillSprendimai() {
   // Pildom laimėtoją (pigiausias Atitinka)
   const laimetojasField = document.getElementById('laimetojas');
   if (laimetojasField) laimetojasField.value = items[0].name;
+
+  // Taip pat užpildom Sutarties kainą, jei pažymėta "kaina lygi laimėjusio"
+  autoFillSutartiesKaina();
+}
+
+// AUTO-FILL Sutarties kainos pagal laimėtojo pasiūlymą
+// Veikia kai pažymėtas "Sutarties kaina lygi laimėjusio pasiūlymo kainai"
+function autoFillSutartiesKaina() {
+  // Patikrinam ar pažymėta "lygi laimėjusio pasiūlymo kainai"
+  let useWinnerPrice = false;
+  // Forma 1: checkbox kainaLygiLaimejusio
+  const cb = document.querySelector('[data-field="kainaLygiLaimejusio"]');
+  if (cb && cb.checked) useWinnerPrice = true;
+  // Forma 2: radio kainosTipas=laimejusi
+  const radio = document.querySelector('input[name="kainosTipas"]:checked');
+  if (radio && radio.value === 'laimejusi') useWinnerPrice = true;
+  if (!useWinnerPrice) return;
+
+  // Šaltinio lentelė priklauso nuo derybų
+  const derybRadio = document.querySelector('input[name="derybos"]:checked');
+  const isDeryb = derybRadio && derybRadio.value === 'Vykdomos';
+  const tbody = document.getElementById(isDeryb ? 'galutiniai-tbody' : 'pasiulymu-tbody');
+  if (!tbody) return;
+
+  const vertField = isDeryb ? 'galVert' : 'pasiulVert';
+  const beField = isDeryb ? 'galKainaBePvm' : 'kainaBePvm';
+  const suField = isDeryb ? 'galKainaSuPvm' : 'kainaSuPvm';
+
+  // Surandam pigiausią Atitinka pasiūlymą
+  let bestBe = null;
+  let bestSu = null;
+  let bestPrice = Infinity;
+  for (const tr of tbody.children) {
+    const vert = tr.querySelector(`[data-field="${vertField}"]`)?.value || '';
+    const beStr = tr.querySelector(`[data-field="${beField}"]`)?.value || '';
+    const suStr = tr.querySelector(`[data-field="${suField}"]`)?.value || '';
+    const price = parseFloat(beStr);
+    if (vert === 'Atitinka' && !isNaN(price) && price < bestPrice) {
+      bestPrice = price;
+      bestBe = beStr;
+      bestSu = suStr;
+    }
+  }
+  if (bestBe === null) return;
+
+  const sutartBe = document.getElementById('sutarties-be-pvm');
+  const sutartSu = document.getElementById('sutarties-su-pvm');
+  if (sutartBe) sutartBe.value = bestBe;
+  if (sutartSu) sutartSu.value = bestSu;
 }
 
 function addNatSaugRow() {
