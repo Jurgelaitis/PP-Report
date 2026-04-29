@@ -1151,7 +1151,7 @@ function renderSection4(formNum) {
 
 function renderForm1NationalSecurity() {
   return `
-    <h4 style="font-size:13px; margin:20px 0 8px; color:#003a70;">2 lentelė. Atitikimas nacionalinio saugumo reikalavimams</h4>
+    <h4 id="ns-heading-1" style="font-size:13px; margin:20px 0 8px; color:#003a70;">2 lentelė. Atitikimas nacionalinio saugumo reikalavimams</h4>
     <div class="field full-row">
       <label>Ar tiekėjui suteikiama prieiga prie reikšmingų ryšių/IS sistemų arba ar perkamos BVPŽ kodų prekės/paslaugos iš sąrašo?</label>
       <div class="radio-group inline">
@@ -1160,7 +1160,7 @@ function renderForm1NationalSecurity() {
       </div>
     </div>
     <div id="nat-saug-container" class="conditional">
-      <h5 style="font-size:12px; margin:12px 0 6px;">3 lentelė. Atitikimas nacionalinio saugumo reikalavimams</h5>
+      <h5 id="ns-heading-2" style="font-size:12px; margin:12px 0 6px;">3 lentelė. Atitikimas nacionalinio saugumo reikalavimams</h5>
       <table class="data-table" id="natsaug-table">
         <thead>
           <tr>
@@ -1417,15 +1417,21 @@ function toggleCvpIs(radio) {
 }
 
 function toggleDerybos(radio) {
+  const isDeryb = radio.value === 'Vykdomos';
   const section = document.getElementById('derybos-section');
-  if (section) section.classList.toggle('show', radio.value === 'Vykdomos');
+  if (section) section.classList.toggle('show', isDeryb);
   // Atnaujinam 1 lentelės pavadinimą - jei vyksta derybos, vadinama "Pirminiai"
   const heading = document.getElementById('pasiulymu-heading');
   if (heading) {
-    heading.textContent = radio.value === 'Vykdomos'
+    heading.textContent = isDeryb
       ? '1 lentelė. Gauti pirminiai pasiūlymai'
       : '1 lentelė. Gauti pasiūlymai';
   }
+  // Atnaujinam nacionalinio saugumo lentelės numeravimą (form 1)
+  const ns1 = document.getElementById('ns-heading-1');
+  const ns2 = document.getElementById('ns-heading-2');
+  if (ns1) ns1.textContent = (isDeryb ? '3' : '2') + ' lentelė. Atitikimas nacionalinio saugumo reikalavimams';
+  if (ns2) ns2.textContent = (isDeryb ? '4' : '3') + ' lentelė. Atitikimas nacionalinio saugumo reikalavimams';
 }
 
 function toggleNatSaug(radio) {
@@ -2054,11 +2060,13 @@ function buildPreviewHtml(data) {
     html += `</table>`;
   }
 
-  // Form 1 nat saugumas
+  // Form 1 nat saugumas - numeracija pasislenka, kai derybos=Vykdomos
   if (formNum === 1) {
-    html += `<br><strong>2 lentelė. Nacionalinis saugumas:</strong> ${r.natSaug === 'Taip' ? '☒ Taip ☐ Ne' : '☐ Taip ☒ Ne'}`;
+    const nsBaseNum = isDeryb ? 3 : 2;
+    html += `<br><strong>${nsBaseNum} lentelė. Atitikimas nacionalinio saugumo reikalavimams:</strong> ${r.natSaug === 'Taip' ? '☒ Taip ☐ Ne' : '☐ Taip ☒ Ne'}`;
     if (r.natSaug === 'Taip') {
-      html += `<br><strong>3 lentelė:</strong><table><tr><th>Nr.</th><th>Tiekėjas</th><th>Pateikė dok.</th><th>Neregistruoti</th><th>Pastabos</th></tr>`;
+      html += `<br><strong>${nsBaseNum + 1} lentelė. Atitikimas nacionalinio saugumo reikalavimams:</strong>`;
+      html += `<table><tr><th>Nr.</th><th>Tiekėjas</th><th>Pateikė dok.</th><th>Neregistruoti</th><th>Pastabos</th></tr>`;
       (data.rows.natSaug || []).forEach((n, i) => {
         html += `<tr><td>${i+1}</td><td>${escapeHtml(n.natTiekejas || '')}</td><td>${escapeHtml(n.natDok || '')}</td><td>${escapeHtml(n.natRiziking || '')}</td><td>${escapeHtml(n.natPastabos || '')}</td></tr>`;
       });
@@ -2434,6 +2442,11 @@ async function buildDocx(data) {
         ], { colSpan: 4 })]
       }));
       if (r.natSaug === 'Taip') {
+        // Detalioji lentelė - su vidiniu pavadinimu (numeracija +1)
+        rows.push(new TableRow({
+          children: [cell(par([txt(`${nsBaseNum + 1} lentelė. Atitikimas nacionalinio saugumo reikalavimams:`,
+            { bold: true, italics: true })]), { colSpan: 4 })]
+        }));
         rows.push(buildNatSaugLentele(data, 4));
       }
     }
