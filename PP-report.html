@@ -1034,7 +1034,7 @@ function renderSection4(formNum) {
       </div>
       <h5 style="font-size:12px; margin:12px 0 6px;">2 lentelė. Gauti galutiniai pasiūlymai</h5>
       <div class="helper-box info">
-        Jeigu tiekėjas nepateikė galutinio pasiūlymo - pažymėkite langelį, ir jo pirminis pasiūlymas bus laikomas galutiniu (kainos perimamos automatiškai).
+        Tiekėjai automatiškai perimami iš 1 lentelės. Jeigu tiekėjas nepateikė galutinio pasiūlymo - pažymėkite langelį, ir jo pirminis pasiūlymas bus laikomas galutiniu (kainos perimamos automatiškai).
       </div>
       <table class="data-table" id="galutiniai-table">
         <thead>
@@ -1051,7 +1051,6 @@ function renderSection4(formNum) {
         </thead>
         <tbody id="galutiniai-tbody"></tbody>
       </table>
-      <button type="button" class="add-row-btn" onclick="addGalutinisRow()">+ Pridėti galutinį pasiūlymą</button>
     </div>` + (formNum === 2 ? `
 
     <h4 style="font-size:13px; margin:20px 0 8px; color:#003a70;">Galimo laimėtojo kvalifikacijos vertinimas</h4>
@@ -1619,7 +1618,7 @@ function addGalutinisRow() {
   const tr = document.createElement('tr');
   tr.innerHTML = `
     <td style="text-align:center;">${tbody.children.length + 1}</td>
-    <td><input type="text" data-field="tiekejas" placeholder="Tiekėjas" oninput="onGalutiniTiekejasChange(this); autoFillSprendimai();"></td>
+    <td><input type="text" data-field="tiekejas" placeholder="Tiekėjas (auto - iš 1 lentelės)" readonly style="background:#f9fafb; color:#374151;" oninput="onGalutiniTiekejasChange(this); autoFillSprendimai();"></td>
     <td style="text-align:center;">
       <input type="checkbox" data-field="nepateikGalutinio" onchange="toggleNepateikGalutinio(this); autoFillSprendimai();" title="Nepateikė galutinio - pirminis laikomas galutiniu">
     </td>
@@ -1708,7 +1707,8 @@ function onPasiulymasPriceChange(input) {
   autoFillSprendimai();
 }
 
-// SYNC: užtikrinti, kad galutiniai pasiūlymai turi tas pačias eilutes pagal tiekėjus iš pirminių
+// SYNC: užtikrinti, kad galutiniai pasiūlymai turi tas pačias eilutes kaip pirminiai
+// Susiejimas vyksta pagal eilutės ID (data-pas-id), todėl pavadinimo redagavimas neduplikuoja eilučių
 // Veikia tik jei derybos=Vykdomos
 function syncGalutiniaiFromPasiulymai() {
   const derybRadio = document.querySelector('input[name="derybos"]:checked');
@@ -1717,55 +1717,49 @@ function syncGalutiniaiFromPasiulymai() {
   const pasTbody = document.getElementById('pasiulymu-tbody');
   if (!galTbody || !pasTbody) return;
 
-  // Surinkim pirminių tiekėjų pavadinimus (su tvarka)
-  const pasTiekejai = [];
-  for (const tr of pasTbody.children) {
-    const name = (tr.querySelector('[data-field="tiekejas"]')?.value || '').trim();
-    if (name) pasTiekejai.push(name);
-  }
+  // Pirminių pasiūlymų eilučių info su jų ID
+  const pasRows = Array.from(pasTbody.children).map(tr => ({
+    id: String(tr.dataset.id || ''),
+    name: (tr.querySelector('[data-field="tiekejas"]')?.value || '').trim()
+  })).filter(p => p.id); // tik su ID
 
-  // Surinkim esamus galutinių tiekėjus su jų eilutėmis
-  const galByName = {};
+  // Esami galutinių pasiūlymai su jų susiejimo ID
+  const galByLinkedId = {};
   for (const tr of galTbody.children) {
-    const name = (tr.querySelector('[data-field="tiekejas"]')?.value || '').trim();
-    if (name) galByName[name.toLowerCase()] = tr;
+    const linkedId = String(tr.dataset.linkedId || '');
+    if (linkedId) galByLinkedId[linkedId] = tr;
   }
 
-  // 1. Pridedam trūkstamus
-  pasTiekejai.forEach(name => {
-    if (!galByName[name.toLowerCase()]) {
+  // Atnaujinam galutinių lentelę pagal pirminių sąrašą
+  const newGalRows = [];
+  pasRows.forEach(pas => {
+    let galTr = galByLinkedId[pas.id];
+    if (!galTr) {
+      // Sukuriam naują eilutę su susiejimu
       addGalutinisRow();
-      const newTr = galTbody.lastElementChild;
-      const tiekejasInput = newTr.querySelector('[data-field="tiekejas"]');
-      if (tiekejasInput) tiekejasInput.value = name;
+      galTr = galTbody.lastElementChild;
+      galTr.dataset.linkedId = pas.id;
     }
+    // Atnaujinam pavadinimą jei pasikeitęs
+    const tiekejasInput = galTr.querySelector('[data-field="tiekejas"]');
+    if (tiekejasInput && tiekejasInput.value !== pas.name) {
+      tiekejasInput.value = pas.name;
+      // Jei "nepateikė galut" pažymėtas - perimti naujas kainas iš pirminio
+      const cb = galTr.querySelector('[data-field="nepateikGalutinio"]');
+      if (cb && cb.checked) toggleNepateikGalutinio(cb);
+    }
+    newGalRows.push(galTr);
   });
 
-  // 2. Atnaujinam pavadinimus jeigu pasikeitė (lyginam pagal eilę)
-  // (perduokim pirminių pavadinimus į galutinius pagal eilės numerį)
-  const galRows = Array.from(galTbody.children);
-  // Atnaujinam pirmus N galutinių pagal pirminių pavadinimus
-  for (let i = 0; i < pasTiekejai.length && i < galRows.length; i++) {
-    const galTiekejasInput = galRows[i].querySelector('[data-field="tiekejas"]');
-    if (galTiekejasInput && galTiekejasInput.value.trim() !== pasTiekejai[i]) {
-      // Tikrinam ar šis pavadinimas yra unikalus pirminiuose - jei ne, nepakeičiam
-      const existingMatch = pasTiekejai.find(n => n.toLowerCase() === galTiekejasInput.value.trim().toLowerCase());
-      if (!existingMatch) {
-        galTiekejasInput.value = pasTiekejai[i];
-      }
-    }
-  }
+  // Pašalinam tik tas galutinių eilutes, kurios anksčiau buvo susijusios su jau pašalintu pirminių pasiūlymu
+  // (rankomis pridėtas eilutes be linkedId paliekam)
+  Array.from(galTbody.children).forEach(tr => {
+    if (!newGalRows.includes(tr) && tr.dataset.linkedId) tr.remove();
+  });
 
-  // 3. Pašalinam galutinius eilutes, kurių tiekėjų nebėra pirminiuose
-  const pasNamesLower = pasTiekejai.map(n => n.toLowerCase());
-  const toRemove = [];
-  for (const tr of galTbody.children) {
-    const name = (tr.querySelector('[data-field="tiekejas"]')?.value || '').trim().toLowerCase();
-    if (name && !pasNamesLower.includes(name)) {
-      toRemove.push(tr);
-    }
-  }
-  toRemove.forEach(tr => tr.remove());
+  // Užtikrinam, kad sinchronizuotos eilutės būtų pradžioje, eilėje pagal pirminių
+  newGalRows.forEach(tr => galTbody.appendChild(tr));
+
   renumberTable('galutiniai-tbody');
   autoFillSprendimai();
 }
