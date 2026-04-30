@@ -2312,49 +2312,96 @@ function buildSprendimaiHtml(data) {
   if (!scen) return '<em>Pasirinkite scenarijų sprendimų skyriuje.</em>';
 
   const sprendimai = generateSprendimai(data);
-  return sprendimai.map((s, i) => `${i+1}. ${s}`).join('<br>');
+  return sprendimai.map((s, i) => {
+    const lines = String(s).split('\n');
+    const escFirst = escapeHtml(lines[0]);
+    if (lines.length === 1) return `${i+1}. ${escFirst}`;
+    // Po-eilutės su nedidelio dydžio indentu
+    const sub = lines.slice(1).map(l => l.trim()).filter(Boolean)
+      .map(l => `<span style="margin-left:24px; display:block;">${escapeHtml(l)}</span>`).join('');
+    return `${i+1}. ${escFirst}${sub}`;
+  }).join('<br>');
 }
 
 function generateSprendimai(data) {
   const f = data.fields;
+  const r = data.radios || {};
   const formNum = data.formNum;
   const scen = f.sprendimoScenarijus;
   const laimet = f.laimetojas || '<Tiekėjo pavadinimas>';
   const list = [];
 
+  // Šaltinio lentelė: jei vyksta derybos - 2 lentelė (galutiniai), kitu atveju - 1 lentelė (pirminiai)
+  const isDeryb = r.derybos === 'Vykdomos';
+  const sourceRows = isDeryb ? (data.rows.galutiniai || []) : (data.rows.pasiulymai || []);
+  const vertField = isDeryb ? 'galVert' : 'pasiulVert';
+  const lentNr = isDeryb ? '2' : '1';
+  const lentelePav = isDeryb ? 'galutinių pasiūlymų' : 'pasiūlymų';
+
+  // Tiekėjai pagal vertinimo statusą
+  const atitinkantys = sourceRows
+    .filter(p => p[vertField] === 'Atitinka' && (p.tiekejas || '').trim())
+    .map(p => p.tiekejas.trim());
+  const neatitinkantys = sourceRows
+    .filter(p => p[vertField] === 'Neatitinka' && (p.tiekejas || '').trim())
+    .map(p => p.tiekejas.trim());
+
   if (scen === 'sutartis') {
-    list.push('Pripažinti tiekėjo (-ų) pasiūlymą (-us) atitinkančiu (-ais) nustatytus reikalavimus, kurio (-ų) pasiūlymas (-ai) šios pažymos 4 dalies 1 lentelės stulpelyje "Pasiūlymo įvertinimas" pažymėtas varnele "Atitinka".');
-    if ((data.rows.pasiulymai || []).some(p => p.pasiulVert === 'Neatitinka')) {
-      list.push('Pripažinti tiekėjo (-ų) pasiūlymą (-us) neatitinkančiu (-ais) nustatytų reikalavimų, kurio (-ų) pasiūlymas (-ai) šios pažymos 4 dalies 1 lentelės stulpelyje "Pasiūlymo įvertinimas" pažymėtas varnele "Neatitinka" (dėl priežasčių, nurodytų tos pačios lentelės stulpelyje "Neatitikimo aprašymas").');
-      list.push('Remiantis šioje pažymoje nurodytu neatitikimo aprašymu, vadovaujantis Aprašu / Pirkimo sąlygomis, atmesti tiekėjo (-ų) pasiūlymą (-us), kurio (-ų) pasiūlymas (-ai) pažymėtas varnele "Neatitinka".');
+    // 1 punktas: tiekėjai, atitinkantys reikalavimus
+    if (atitinkantys.length > 0) {
+      list.push(`Pripažinti, kad toliau nurodyto (-ų) tiekėjo (-ų) pateikti pasiūlymai atitinka nustatytus reikalavimus (pažymėti varnele "Atitinka" šios pažymos 4 dalies ${lentNr} lentelės stulpelyje "Pasiūlymo įvertinimas"): ${atitinkantys.join(', ')}.`);
+    } else {
+      list.push(`Pripažinti tiekėjo (-ų) pasiūlymą (-us) atitinkančiu (-ais) nustatytus reikalavimus, kurio (-ų) pasiūlymas (-ai) šios pažymos 4 dalies ${lentNr} lentelės stulpelyje "Pasiūlymo įvertinimas" pažymėtas varnele "Atitinka".`);
     }
+
+    // 2 punktas: tiekėjai, neatitinkantys reikalavimų
+    if (neatitinkantys.length > 0) {
+      list.push(`Pripažinti, kad toliau nurodyto (-ų) tiekėjo (-ų) pateikti pasiūlymai neatitinka nustatytų reikalavimų (dėl priežasčių, nurodytų šios pažymos 4 dalies ${lentNr} lentelės stulpelyje "Neatitikimo aprašymas"): ${neatitinkantys.join(', ')}.`);
+
+      // 3 punktas: atmestini pasiūlymai
+      list.push(`Remiantis šioje pažymoje nurodytu neatitikimo aprašymu, vadovaujantis Aprašu / Pirkimo sąlygomis, atmesti toliau nurodyto (-ų) tiekėjo (-ų) pasiūlymą (-us): ${neatitinkantys.join(', ')}.`);
+    }
+
+    // Forma 2: kvalifikacijos vertinimas
     if (formNum === 2 && f.kvalifTiekejas) {
-      list.push(`Pripažinti, kad ${escapeHtml(f.kvalifTiekejas)} neturi pašalinimo pagrindų, atitinka Pirkimo sąlygose nustatytus kvalifikacijos ir/ar kitus reikalavimus.`);
+      list.push(`Pripažinti, kad ${f.kvalifTiekejas} neturi pašalinimo pagrindų, atitinka Pirkimo sąlygose nustatytus kvalifikacijos ir/ar kitus reikalavimus.`);
     }
+
+    // 4 punktas (ar tolesnis): pasiūlymų eilė - su NL, kurios pavirs atskiromis paragrafais Word'e
     if (f.pasiulymuEile) {
       list.push('Vadovaujantis Aprašu, nustatyti šią pasiūlymų eilę ekonominio naudingumo mažėjimo tvarka:\n' + f.pasiulymuEile);
     }
-    list.push(`Pripažinti ${escapeHtml(laimet)} pasiūlymą laimėjusiu ir sudaryti su juo sutartį.`);
+
+    list.push(`Pripažinti ${laimet} pasiūlymą laimėjusiu ir sudaryti su juo sutartį.`);
     list.push('Sutarties sudarymo atidėjimo terminas nėra taikomas.');
     list.push('Informuoti dalyvius apie priimtus sprendimus.');
   } else if (scen === 'vienas-tiekejas') {
-    list.push('Pripažinti tiekėjo pasiūlymą atitinkančiu nustatytus reikalavimus.');
+    if (atitinkantys.length > 0) {
+      list.push(`Pripažinti, kad ${atitinkantys.join(', ')} pasiūlymas atitinka nustatytus reikalavimus.`);
+    } else {
+      list.push('Pripažinti tiekėjo pasiūlymą atitinkančiu nustatytus reikalavimus.');
+    }
     if (formNum === 2 && f.kvalifTiekejas) {
-      list.push(`Pripažinti, kad ${escapeHtml(f.kvalifTiekejas)} neturi pašalinimo pagrindų, atitinka Pirkimo sąlygose nustatytus kvalifikacijos ir/ar kitus reikalavimus.`);
+      list.push(`Pripažinti, kad ${f.kvalifTiekejas} neturi pašalinimo pagrindų, atitinka Pirkimo sąlygose nustatytus kvalifikacijos ir/ar kitus reikalavimus.`);
     }
     list.push('Atsižvelgiant į tai, kad pasiūlymą pateikė tik vienas tiekėjas / pasiūlymą pateikti buvo kviečiamas tik vienas tiekėjas / pirkimo procedūrų metu atmetus kitus pasiūlymus liko vienas tiekėjas, vadovaujantis Aprašu, pasiūlymų eilė nesudaroma.');
-    list.push(`Pripažinti ${escapeHtml(laimet)} pasiūlymą laimėjusiu ir sudaryti su juo sutartį.`);
+    list.push(`Pripažinti ${laimet} pasiūlymą laimėjusiu ir sudaryti su juo sutartį.`);
     list.push('Sutarties sudarymo atidėjimo terminas nėra taikomas.');
     list.push('Informuoti dalyvius apie priimtus sprendimus.');
   } else if (scen === 'atmesta') {
-    list.push('Pripažinti, kad tiekėjų pateikti pasiūlymai neatitinka Pirkimo sąlygų reikalavimų, kaip aprašyta šios pažymos 4 dalies 1 lentelės stulpelyje "Neatitikimo aprašymas".');
-    list.push('Remiantis šioje pažymoje nurodytu neatitikimo aprašymu, vadovaujantis Aprašu / Pirkimo sąlygomis, atmesti visų tiekėjų pasiūlymus.');
+    if (neatitinkantys.length > 0) {
+      list.push(`Pripažinti, kad toliau nurodyto (-ų) tiekėjo (-ų) pasiūlymai neatitinka Pirkimo sąlygų reikalavimų (kaip aprašyta šios pažymos 4 dalies ${lentNr} lentelės stulpelyje "Neatitikimo aprašymas"): ${neatitinkantys.join(', ')}.`);
+      list.push(`Remiantis šioje pažymoje nurodytu neatitikimo aprašymu, vadovaujantis Aprašu / Pirkimo sąlygomis, atmesti toliau nurodyto (-ų) tiekėjo (-ų) pasiūlymą (-us): ${neatitinkantys.join(', ')}.`);
+    } else {
+      list.push(`Pripažinti, kad tiekėjų pateikti pasiūlymai neatitinka Pirkimo sąlygų reikalavimų, kaip aprašyta šios pažymos 4 dalies ${lentNr} lentelės stulpelyje "Neatitikimo aprašymas".`);
+      list.push('Remiantis šioje pažymoje nurodytu neatitikimo aprašymu, vadovaujantis Aprašu / Pirkimo sąlygomis, atmesti visų tiekėjų pasiūlymus.');
+    }
     list.push('Atsižvelgiant į tai, kad atmesti visi pateikti pasiūlymai, vadovaujantis Lietuvos Respublikos pirkimų, atliekamų vandentvarkos, energetikos, transporto ar pašto paslaugų srities perkančiųjų subjektų, įstatymo 41 straipsnio 2 dalies 2 punkto nuostatomis, Pirkimas laikomas pasibaigusiu.');
     list.push('Informuoti dalyvius apie priimtus sprendimus.');
   } else if (scen === 'negauta') {
     list.push('Atsižvelgiant į tai, kad per nustatytą terminą nepateiktas nė vienas pasiūlymas, vadovaujantis Lietuvos Respublikos pirkimų, atliekamų vandentvarkos, energetikos, transporto ar pašto paslaugų srities perkančiųjų subjektų, įstatymo 41 straipsnio 2 dalies 4 punkto nuostatomis, Pirkimas laikomas pasibaigusiu.');
   } else if (scen === 'nutraukta') {
-    list.push(`Atsižvelgiant į tai, kad ${escapeHtml(f.nutraukimoPriezastis || '____')} bei vadovaujantis Aprašo nuostatomis, nutraukti Pirkimo procedūras.`);
+    list.push(`Atsižvelgiant į tai, kad ${f.nutraukimoPriezastis || '____'} bei vadovaujantis Aprašo nuostatomis, nutraukti Pirkimo procedūras.`);
     list.push('Atsižvelgiant į tai, kad Pirkimo procedūros yra nutraukiamos, vadovaujantis Lietuvos Respublikos pirkimų, atliekamų vandentvarkos, energetikos, transporto ar pašto paslaugų srities perkančiųjų subjektų, įstatymo 41 straipsnio 2 dalies 3 punkto nuostatomis, Pirkimas laikomas pasibaigusiu.');
     list.push('Informuoti dalyvius apie priimtus sprendimus.');
   }
@@ -2664,8 +2711,13 @@ async function buildDocx(data) {
       ? sprendimai.map((s, i) => {
           const lines = String(s).split('\n');
           if (lines.length === 1) return par([txt(`${i+1}. ${s}`)]);
+          // Pirma eilutė su pagrindiniu numeravimu
           const result = [par([txt(`${i+1}. ${lines[0]}`)])];
-          for (let j = 1; j < lines.length; j++) result.push(par([txt('   ' + lines[j])]));
+          // Po-eilutės (pvz., pasiūlymų eilė) - su Tab indentu
+          for (let j = 1; j < lines.length; j++) {
+            const lineText = lines[j].trim();
+            if (lineText) result.push(par([txt('\t' + lineText)]));
+          }
           return result;
         }).flat()
       : [par([txt('Sprendimai dar nepasirinkti.', { italics: true })])];
