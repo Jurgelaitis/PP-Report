@@ -714,7 +714,7 @@
     <span class="spacer"></span>
     <span id="draft-info" class="draft-info"></span>
     <button onclick="showPreview()">👁️ Peržiūrėti</button>
-    <button class="success" onclick="generateDocx()">📄 Generuoti Word</button>
+    <button class="success" onclick="generateDocx()" id="generate-btn" title="Generuoja pažymą; jei pirkimas atliekamas raštu - taip pat ir pranešimus tiekėjams (ZIP archyve)">📄 Generuoti Word</button>
   </div>
 
   <!-- FORM CONTAINER -->
@@ -790,6 +790,12 @@
     'https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js'
   ], () => console.log('FileSaver užkrautas'));
+  // JSZip - dokumentų pakavimui į vieną ZIP failą
+  loadScriptWithFallback([
+    'https://unpkg.com/jszip@3.10.1/dist/jszip.min.js',
+    'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'
+  ], () => console.log('JSZip užkrautas'));
 </script>
 
 <script>
@@ -1323,7 +1329,7 @@ function renderSection6(formNum) {
       <div class="section-body">
         <div class="helper-box info">
           <strong>Pasirinkite scenarijų:</strong>
-          Pagal pasirinkimą sprendimų tekstas bus automatiškai įtrauktas į pažymą.
+          Pagal pasirinkimą sprendimų tekstas bus automatiškai įtrauktas į pažymą. Jei pirkimas atliekamas raštu (el. paštu / CVP IS), kartu su pažyma automatiškai bus sugeneruoti ir <strong>individualūs pranešimai kiekvienam tiekėjui</strong> pagal LR pirkimų įstatymo 68 str. ir VPT pasiūlymų vertinimo gaires.
         </div>
         <div class="field full-row">
           <label>Pirkimo eigos scenarijus <span class="req">*</span></label>
@@ -2915,12 +2921,286 @@ async function buildDocx(data) {
 
     const blob = await Packer.toBlob(doc);
     const filename = makeFilename(f);
-    saveAs(blob, filename);
-    showToast('Word dokumentas sugeneruotas: ' + filename, 'success');
+
+    // Jei pirkimas atliekamas raštu (el. paštu arba CVP IS) - paketas su pranešimais ZIP archyve
+    const isRastu = (data.radios.atliekamas === 'El. paštu' || data.radios.atliekamas === 'CVP IS');
+    const notifList = isRastu ? generateNotificationList(data) : [];
+
+    if (notifList.length > 0 && typeof JSZip !== 'undefined') {
+      // ZIP paketą su pažyma + pranešimais
+      showToast('Generuojami pranešimai tiekėjams...', 'info');
+      const zip = new JSZip();
+      zip.file(filename, blob);
+      for (const notif of notifList) {
+        try {
+          const notifBlob = await buildNotificationDocx(data, notif);
+          zip.file(notif.filename, notifBlob);
+        } catch (e) {
+          console.error('Pranešimo klaida (' + notif.recipient + '):', e);
+        }
+      }
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const zipName = makeZipFilename(f);
+      saveAs(zipBlob, zipName);
+      showToast(`Paketas sugeneruotas: ${zipName} (${notifList.length + 1} dokumentai)`, 'success');
+    } else {
+      saveAs(blob, filename);
+      showToast('Word dokumentas sugeneruotas: ' + filename, 'success');
+    }
   } catch (e) {
     console.error(e);
     showToast('Klaida generuojant Word: ' + e.message, 'error');
   }
+}
+
+function makeZipFilename(f) {
+  let name = 'Pirkimas';
+  if (f.docNr) name += '_' + f.docNr.replace(/[^a-zA-Z0-9-_]/g, '_');
+  if (f.pirkimoPavadinimas) {
+    let pav = f.pirkimoPavadinimas.substring(0, 40)
+      .replace(/[^a-zA-Z0-9ąčęėįšųūžĄČĘĖĮŠŲŪŽ -]/g, '')
+      .replace(/\s+/g, '_');
+    name += '_' + pav;
+  }
+  return name + '.zip';
+}
+
+function sanitizeFilename(s) {
+  return String(s || 'tiekejas')
+    .replace(/[^a-zA-Z0-9ąčęėįšųūžĄČĘĖĮŠŲŪŽ -]/g, '')
+    .replace(/\s+/g, '_')
+    .substring(0, 50);
+}
+
+// ============================================================
+// PRANEŠIMŲ TIEKĖJAMS LOGIKA
+// ============================================================
+function generateNotificationList(data) {
+  const f = data.fields;
+  const r = data.radios || {};
+  const scen = f.sprendimoScenarijus;
+  const isDeryb = r.derybos === 'Vykdomos';
+  const sourceRows = isDeryb ? (data.rows.galutiniai || []) : (data.rows.pasiulymai || []);
+  const vertField = isDeryb ? 'galVert' : 'pasiulVert';
+  const winnerName = (f.laimetojas || '').trim().toLowerCase();
+
+  const notifications = [];
+
+  if (scen === 'sutartis' || scen === 'vienas-tiekejas') {
+    sourceRows.forEach(row => {
+      const name = (row.tiekejas || '').trim();
+      if (!name) return;
+      const vert = row[vertField] || '';
+      let type;
+      if (vert === 'Atitinka') {
+        type = (name.toLowerCase() === winnerName) ? 'winner' : 'lost_atitinka';
+      } else if (vert === 'Neatitinka') {
+        type = 'rejected';
+      } else {
+        return; // be vertinimo - praleisti
+      }
+      notifications.push({
+        recipient: name,
+        type,
+        neatitikimas: row.neatitikimas || row.galNeatitikimas || '',
+        filename: `Pranesimas_${sanitizeFilename(name)}_${type}.docx`
+      });
+    });
+  } else if (scen === 'atmesta') {
+    sourceRows.forEach(row => {
+      const name = (row.tiekejas || '').trim();
+      if (!name) return;
+      notifications.push({
+        recipient: name,
+        type: 'all_rejected',
+        neatitikimas: row.neatitikimas || row.galNeatitikimas || '',
+        filename: `Pranesimas_${sanitizeFilename(name)}_atmesta.docx`
+      });
+    });
+  } else if (scen === 'nutraukta') {
+    sourceRows.forEach(row => {
+      const name = (row.tiekejas || '').trim();
+      if (!name) return;
+      notifications.push({
+        recipient: name,
+        type: 'terminated',
+        filename: `Pranesimas_${sanitizeFilename(name)}_nutraukta.docx`
+      });
+    });
+  }
+
+  return notifications;
+}
+
+// Pranešimo turinio generavimas (paragraphų masyvas)
+function buildNotificationParagraphs(data, notif) {
+  const { Paragraph, TextRun, AlignmentType, HeadingLevel } = docx;
+  const f = data.fields;
+  const r = data.radios || {};
+  const winnerName = f.laimetojas || '____';
+  const pavadinimas = f.pirkimoPavadinimas || '____';
+
+  const intro = `Vadovaujantis Lietuvos Respublikos pirkimų, atliekamų vandentvarkos, energetikos, transporto ar pašto paslaugų srities perkančiųjų subjektų, įstatymo 68 straipsnio 1 dalimi, informuojame, kad pirkimo "${pavadinimas}" (toliau – Pirkimas) procedūros baigtos.`;
+  const apeliac = 'Informuojame, kad teisės aktų nustatyta tvarka turite teisę kreiptis dėl sprendimo apskundimo, vadovaujantis Lietuvos Respublikos pirkimų, atliekamų vandentvarkos, energetikos, transporto ar pašto paslaugų srities perkančiųjų subjektų, įstatymo VII skyriumi.';
+
+  const paragraphs = [];
+  paragraphs.push(par([txt(intro)]));
+  paragraphs.push(par([txt('Pirkimo rezultatai:', { bold: true })]));
+
+  if (notif.type === 'winner') {
+    paragraphs.push(par([txt('1. Jūsų pateiktas pasiūlymas pripažintas atitinkančiu Pirkimo sąlygų reikalavimus.')]));
+    if (f.pasiulymuEile && f.pasiulymuEile.includes('\n')) {
+      paragraphs.push(par([txt('2. Nustatyta pasiūlymų eilė ekonominio naudingumo mažėjimo tvarka:')]));
+      f.pasiulymuEile.split('\n').forEach(line => {
+        const t = line.trim();
+        if (t) paragraphs.push(par([txt('\t' + t)]));
+      });
+      paragraphs.push(par([txt('3. Jūsų pateiktas pasiūlymas pripažintas laimėjusiu. Su Jumis bus sudaroma pirkimo sutartis.')]));
+      if (f.sutartiesBePvm) {
+        paragraphs.push(par([txt(`4. Numatoma sutarties kaina: ${f.sutartiesBePvm} Eur be PVM (${f.sutartiesSuPvm || '____'} Eur su PVM).`)]));
+      }
+    } else {
+      paragraphs.push(par([txt('2. Jūsų pateiktas pasiūlymas pripažintas laimėjusiu. Su Jumis bus sudaroma pirkimo sutartis.')]));
+      if (f.sutartiesBePvm) {
+        paragraphs.push(par([txt(`3. Numatoma sutarties kaina: ${f.sutartiesBePvm} Eur be PVM (${f.sutartiesSuPvm || '____'} Eur su PVM).`)]));
+      }
+    }
+    paragraphs.push(par([txt('Atkreipiame dėmesį, kad sutarties sudarymo atidėjimo terminas šiam pirkimui nėra taikomas. Su Jumis netrukus susisieksime dėl sutarties sudarymo sąlygų.')]));
+  } else if (notif.type === 'lost_atitinka') {
+    paragraphs.push(par([txt('1. Jūsų pateiktas pasiūlymas pripažintas atitinkančiu Pirkimo sąlygų reikalavimus.')]));
+    if (f.pasiulymuEile && f.pasiulymuEile.includes('\n')) {
+      paragraphs.push(par([txt('2. Nustatyta pasiūlymų eilė ekonominio naudingumo mažėjimo tvarka:')]));
+      f.pasiulymuEile.split('\n').forEach(line => {
+        const t = line.trim();
+        if (t) paragraphs.push(par([txt('\t' + t)]));
+      });
+      paragraphs.push(par([txt(`3. Laimėjusiu pripažintas ${winnerName} pasiūlymas. Su laimėjusiu tiekėju bus sudaroma pirkimo sutartis.`)]));
+    } else {
+      paragraphs.push(par([txt(`2. Laimėjusiu pripažintas ${winnerName} pasiūlymas. Su laimėjusiu tiekėju bus sudaroma pirkimo sutartis.`)]));
+    }
+    paragraphs.push(par([txt('Dėkojame už dalyvavimą Pirkime.')]));
+  } else if (notif.type === 'rejected') {
+    paragraphs.push(par([txt('1. Jūsų pateiktas pasiūlymas pripažintas neatitinkančiu Pirkimo sąlygų reikalavimų. Pasiūlymo atmetimo priežastys:')]));
+    paragraphs.push(par([txt('\t' + (notif.neatitikimas || '[neatitikimo aprašymas]'))]));
+    paragraphs.push(par([txt('2. Vadovaujantis Aprašu / Pirkimo sąlygomis, Jūsų pateiktas pasiūlymas atmestas.')]));
+    paragraphs.push(par([txt(`3. Laimėjusiu pripažintas ${winnerName} pasiūlymas. Su laimėjusiu tiekėju bus sudaroma pirkimo sutartis.`)]));
+  } else if (notif.type === 'all_rejected') {
+    paragraphs.push(par([txt('1. Jūsų pateiktas pasiūlymas pripažintas neatitinkančiu Pirkimo sąlygų reikalavimų. Pasiūlymo atmetimo priežastys:')]));
+    paragraphs.push(par([txt('\t' + (notif.neatitikimas || '[neatitikimo aprašymas]'))]));
+    paragraphs.push(par([txt('2. Vadovaujantis Aprašu / Pirkimo sąlygomis, Jūsų pateiktas pasiūlymas atmestas.')]));
+    paragraphs.push(par([txt('3. Atsižvelgiant į tai, kad visi pateikti pasiūlymai buvo atmesti, Pirkimas baigtas nesudarant sutarties (vadovaujantis Įstatymo 41 str. 2 d. 2 p.).')]));
+  } else if (notif.type === 'terminated') {
+    paragraphs.push(par([txt(`1. Pirkimo procedūros nutrauktos. Nutraukimo priežastys: ${f.nutraukimoPriezastis || '____'}.`)]));
+    paragraphs.push(par([txt('2. Vadovaujantis Įstatymo 41 str. 2 d. 3 p., Pirkimas laikomas pasibaigusiu.')]));
+    paragraphs.push(par([txt('Dėkojame už dalyvavimą Pirkime.')]));
+  }
+
+  paragraphs.push(par([txt('')]));
+  paragraphs.push(par([txt(apeliac)]));
+  return paragraphs;
+}
+
+async function buildNotificationDocx(data, notif) {
+  const f = data.fields;
+  const {
+    Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+    AlignmentType, BorderStyle, WidthType, VerticalAlign, Header, ImageRun
+  } = docx;
+
+  // Logo bytes
+  function base64ToUint8Array(b64) {
+    const binStr = atob(b64);
+    const len = binStr.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) bytes[i] = binStr.charCodeAt(i);
+    return bytes;
+  }
+  const logoBytes = base64ToUint8Array(LITGRID_LOGO_BASE64);
+
+  const pageHeader = new Header({
+    children: [
+      new Paragraph({
+        alignment: AlignmentType.LEFT,
+        children: [
+          new ImageRun({
+            data: logoBytes,
+            transformation: { width: 60, height: 90 }
+          })
+        ]
+      })
+    ]
+  });
+
+  // Pranešimo data ir numeris (pranešimo numeris = pažymos numeris + suffix)
+  const datePar = new Paragraph({
+    alignment: AlignmentType.RIGHT,
+    children: [new TextRun({ text: formatDocDate(f.docDate), size: 22 })],
+    spacing: { before: 0, after: 80 }
+  });
+
+  // Gavėjo informacija
+  const recipientPars = [
+    new Paragraph({
+      children: [new TextRun({ text: notif.recipient, bold: true, size: 22 })],
+      spacing: { before: 200, after: 40 }
+    }),
+    new Paragraph({
+      children: [new TextRun({ text: '[El. pašto adresas]', size: 20, italics: true, color: '737483' })],
+      spacing: { after: 200 }
+    })
+  ];
+
+  // Antraštė
+  const pavadinimas = f.pirkimoPavadinimas || '____';
+  const titlePar = new Paragraph({
+    alignment: AlignmentType.CENTER,
+    children: [new TextRun({
+      text: `DĖL PIRKIMO "${pavadinimas.toUpperCase()}" REZULTATŲ`,
+      bold: true, size: 22
+    })],
+    spacing: { before: 100, after: 200 }
+  });
+
+  // Pagrindinis tekstas
+  const bodyParagraphs = buildNotificationParagraphs(data, notif);
+
+  // Parašas
+  const signature = [
+    new Paragraph({
+      children: [new TextRun({ text: '' })],
+      spacing: { before: 400 }
+    }),
+    new Paragraph({
+      children: [new TextRun({ text: 'Pagarbiai,', size: 22 })],
+      spacing: { after: 200 }
+    }),
+    new Paragraph({
+      children: [new TextRun({ text: f.tvirtintojas || '____', size: 22, italics: true })],
+      spacing: { after: 40 }
+    }),
+    new Paragraph({
+      children: [new TextRun({ text: 'LITGRID AB', size: 22 })],
+    })
+  ];
+
+  const doc = new Document({
+    creator: 'LITGRID AB Pirkimo pažymos įrankis',
+    title: 'Pranešimas tiekėjui',
+    styles: {
+      default: { document: { run: { font: 'Times New Roman', size: 22 } } }
+    },
+    sections: [{
+      properties: {
+        page: {
+          margin: { top: 1400, right: 1000, bottom: 1000, left: 1000 }
+        }
+      },
+      headers: { default: pageHeader },
+      children: [datePar, ...recipientPars, titlePar, ...bodyParagraphs, ...signature]
+    }]
+  });
+
+  return await Packer.toBlob(doc);
 }
 
 function makeFilename(f) {
