@@ -1921,8 +1921,15 @@ function autoFillSprendimai() {
   if (eileField) eileField.value = eile;
 
   // Pildom laimėtoją (pigiausias Atitinka)
+  const winnerName = items[0].name;
   const laimetojasField = document.getElementById('laimetojas');
-  if (laimetojasField) laimetojasField.value = items[0].name;
+  if (laimetojasField) laimetojasField.value = winnerName;
+
+  // Form 2: užpildom "Galimas laimėtojas" lauką ir Kvalifikacijos lentelės tiekėjo pavadinimą
+  const galimasLaimField = document.getElementById('galimas-laimetojas');
+  if (galimasLaimField) galimasLaimField.value = winnerName;
+  const kvalifTiekField = document.getElementById('kvalif-tiekejas');
+  if (kvalifTiekField) kvalifTiekField.value = winnerName;
 
   // Taip pat užpildom Sutarties kainą, jei pažymėta "kaina lygi laimėjusio"
   autoFillSutartiesKaina();
@@ -3040,8 +3047,14 @@ function buildNotificationParagraphs(data, notif) {
   const winnerName = f.laimetojas || '____';
   const pavadinimas = f.pirkimoPavadinimas || '____';
 
-  const intro = `Vadovaujantis Lietuvos Respublikos pirkimų, atliekamų vandentvarkos, energetikos, transporto ar pašto paslaugų srities perkančiųjų subjektų, įstatymo 68 straipsnio 1 dalimi, informuojame, kad pirkimo "${pavadinimas}" (toliau – Pirkimas) procedūros baigtos.`;
-  const apeliac = 'Informuojame, kad teisės aktų nustatyta tvarka turite teisę kreiptis dėl sprendimo apskundimo, vadovaujantis Lietuvos Respublikos pirkimų, atliekamų vandentvarkos, energetikos, transporto ar pašto paslaugų srities perkančiųjų subjektų, įstatymo VII skyriumi.';
+  // Teisinis pagrindas pranešime - LITGRID Mažos vertės pirkimų vykdymo tvarkos aprašo punktas
+  // Skelbiamai apklausai - 30.20 p., Neskelbiamai apklausai - 31.9 p.
+  const pirkimoBudas = (f.pirkimoBudas || '').toLowerCase();
+  const isSkelbiama = pirkimoBudas.includes('skelbiama') && !pirkimoBudas.includes('neskelbiama');
+  const aprasoPunktas = isSkelbiama ? '30.20 punktu' : '31.9 punktu';
+
+  const intro = `Vadovaujantis LITGRID AB mažos vertės pirkimų vykdymo tvarkos aprašo ${aprasoPunktas}, informuojame, kad pirkimo "${pavadinimas}" (toliau – Pirkimas) procedūros baigtos.`;
+  const apeliac = 'Informuojame, kad teisės aktų nustatyta tvarka turite teisę pareikšti pretenziją Perkančiajam subjektui, vadovaujantis Lietuvos Respublikos pirkimų, atliekamų vandentvarkos, energetikos, transporto ar pašto paslaugų srities perkančiųjų subjektų, įstatymo 109 straipsniu.';
 
   const paragraphs = [];
   paragraphs.push(par([txt(intro)]));
@@ -3164,7 +3177,17 @@ async function buildNotificationDocx(data, notif) {
   // Pagrindinis tekstas
   const bodyParagraphs = buildNotificationParagraphs(data, notif);
 
-  // Parašas
+  // Parašas - Pirkimo organizatorius / iniciatorius (kas vykdo pirkimą)
+  // Form 1: iniciatorius (jis ir vykdo pirkimą iki 15 000 Eur), Form 2: organizatorius
+  let signerPareigos = '';
+  let signerVardas = '';
+  if (data.formNum === 2 && (f.orgPareigos || f.orgVardas)) {
+    signerPareigos = f.orgPareigos || '';
+    signerVardas = f.orgVardas || '';
+  } else {
+    signerPareigos = f.iniPareigos || '';
+    signerVardas = f.iniVardas || '';
+  }
   const signature = [
     new Paragraph({
       children: [new TextRun({ text: '' })],
@@ -3173,15 +3196,23 @@ async function buildNotificationDocx(data, notif) {
     new Paragraph({
       children: [new TextRun({ text: 'Pagarbiai,', size: 22 })],
       spacing: { after: 200 }
-    }),
-    new Paragraph({
-      children: [new TextRun({ text: f.tvirtintojas || '____', size: 22, italics: true })],
-      spacing: { after: 40 }
-    }),
-    new Paragraph({
-      children: [new TextRun({ text: 'LITGRID AB', size: 22 })],
     })
   ];
+  if (signerPareigos) {
+    signature.push(new Paragraph({
+      children: [new TextRun({ text: signerPareigos, size: 22, italics: true })],
+      spacing: { after: 40 }
+    }));
+  }
+  if (signerVardas) {
+    signature.push(new Paragraph({
+      children: [new TextRun({ text: signerVardas, size: 22 })],
+      spacing: { after: 40 }
+    }));
+  }
+  signature.push(new Paragraph({
+    children: [new TextRun({ text: 'LITGRID AB', size: 22 })],
+  }));
 
   const doc = new Document({
     creator: 'LITGRID AB Pirkimo pažymos įrankis',
