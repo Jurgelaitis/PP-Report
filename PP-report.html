@@ -2588,15 +2588,24 @@ function emptyPar() {
 
 function cell(content, opts = {}) {
   let children;
+  const isBlock = c => c instanceof docx.Paragraph || c instanceof docx.Table;
   if (Array.isArray(content)) {
-    children = content.every(c => c instanceof docx.Paragraph) ? content :
-      [par(content)];
-  } else if (content instanceof docx.Paragraph) {
+    // If every element is a Paragraph or Table (block-level), use as-is.
+    // Otherwise treat as TextRun-style content and wrap inside one paragraph.
+    children = content.every(isBlock) ? content : [par(content)];
+  } else if (isBlock(content)) {
+    children = [content];
+  } else if (content instanceof docx.Table) {
     children = [content];
   } else if (typeof content === 'string') {
     children = [par([txt(content)])];
   } else {
     children = [par([content])];
+  }
+  // A TableCell containing a Table must also include at least one trailing
+  // paragraph (Word requirement). Add an empty paragraph if the last child is a Table.
+  if (children.length > 0 && children[children.length - 1] instanceof docx.Table) {
+    children.push(emptyPar());
   }
   return new docx.TableCell({
     children,
@@ -2644,7 +2653,8 @@ async function buildDocx(data) {
     }
     const logoBytes = base64ToUint8Array(LITGRID_LOGO_BASE64);
 
-    // Word page header with Litgrid logo (left-aligned, ~150x40 px)
+    // Word page header with Litgrid logo (left-aligned)
+    // Original logo aspect ratio is 200x298 (portrait). Preserve proportions.
     const pageHeader = new Header({
       children: [
         new Paragraph({
@@ -2652,7 +2662,7 @@ async function buildDocx(data) {
           children: [
             new ImageRun({
               data: logoBytes,
-              transformation: { width: 150, height: 40 }
+              transformation: { width: 70, height: 104 }
             })
           ]
         })
