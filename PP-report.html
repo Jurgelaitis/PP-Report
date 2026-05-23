@@ -1162,65 +1162,71 @@ function renderSection4(formNum) {
           <label><input type="checkbox" data-field="derybElpas"> El. paštu</label>
         </div>
       </div>
-      <h5 style="font-size:12px; margin:12px 0 6px;">2 lentelė. Gauti galutiniai pasiūlymai</h5>
+      <h5 id="galutiniai-heading" style="font-size:12px; margin:12px 0 6px;">2 lentelė. Gauti galutiniai pasiūlymai</h5>
       <div class="helper-box info">
         Tiekėjai automatiškai perimami iš 1 lentelės. Jeigu tiekėjas nepateikė galutinio pasiūlymo - pažymėkite langelį, ir jo pirminis pasiūlymas bus laikomas galutiniu (kainos perimamos automatiškai).
       </div>
-      <table class="data-table" id="galutiniai-table">
-        <thead>
-          <tr>
-            <th style="width:40px;">Nr.</th>
-            <th class="dalis-col" style="width:140px; display:none;">Pirkimo objekto dalis</th>
-            <th>Tiekėjo pavadinimas</th>
-            <th style="width:130px;">Nepateikė galut. pas.<br><span style="font-weight:normal;font-size:10px;">(pirminis = galutinis)</span></th>
-            <th style="width:130px;">Galutinė kaina be PVM</th>
-            <th style="width:130px;">Galutinė kaina su PVM</th>
-            <th style="width:90px;">Vertinimas</th>
-            <th>Neatitikimas</th>
-            <th style="width:60px;"></th>
-          </tr>
-        </thead>
-        <tbody id="galutiniai-tbody"></tbody>
-      </table>
+      <div id="galutiniai-block">
+        <table class="data-table" id="galutiniai-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">Nr.</th>
+              <th class="dalis-col" style="width:140px; display:none;">Pirkimo objekto dalis</th>
+              <th>Tiekėjo pavadinimas</th>
+              <th style="width:130px;">Nepateikė galut. pas.<br><span style="font-weight:normal;font-size:10px;">(pirminis = galutinis)</span></th>
+              <th style="width:130px;">Galutinė kaina be PVM</th>
+              <th style="width:130px;">Galutinė kaina su PVM</th>
+              <th style="width:90px;">Vertinimas</th>
+              <th>Neatitikimas</th>
+              <th style="width:60px;"></th>
+            </tr>
+          </thead>
+          <tbody id="galutiniai-tbody" class="galutiniai-tbody"></tbody>
+        </table>
+      </div>
     </div>` + (formNum === 2 ? `
 
     <h4 style="font-size:13px; margin:20px 0 8px; color:#003a70;">Galimo laimėtojo kvalifikacijos vertinimas</h4>
-    <div class="field full-row">
-      <label>Galimas laimėtojas</label>
-      <input type="text" id="galimas-laimetojas" data-field="galimasLaimetojas" placeholder="Tiekėjo pavadinimas">
+    <div id="kvalif-block">
+      <div class="kvalif-single">
+        <div class="field full-row">
+          <label>Galimas laimėtojas</label>
+          <input type="text" id="galimas-laimetojas" data-field="galimasLaimetojas" placeholder="Tiekėjo pavadinimas">
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Pavadinimas</th>
+              <th style="width:120px;">Kvalifikacija</th>
+              <th style="width:120px;">Kiti reikalavimai</th>
+              <th>Pastabos</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input type="text" id="kvalif-tiekejas" data-field="kvalifTiekejas" placeholder="Tiekėjas"></td>
+              <td>
+                <select id="kvalif-vertinimas" data-field="kvalifVertinimas">
+                  <option value="">--</option>
+                  <option value="Atitinka">Atitinka</option>
+                  <option value="Neatitinka">Neatitinka</option>
+                  <option value="Netaikomi">Netaikomi</option>
+                </select>
+              </td>
+              <td>
+                <select id="kiti-vertinimas" data-field="kitiVertinimas">
+                  <option value="">--</option>
+                  <option value="Atitinka">Atitinka</option>
+                  <option value="Neatitinka">Neatitinka</option>
+                  <option value="Netaikomi">Netaikomi</option>
+                </select>
+              </td>
+              <td><textarea id="kvalif-pastabos" data-field="kvalifPastabos"></textarea></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Pavadinimas</th>
-          <th style="width:120px;">Kvalifikacija</th>
-          <th style="width:120px;">Kiti reikalavimai</th>
-          <th>Pastabos</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><input type="text" id="kvalif-tiekejas" data-field="kvalifTiekejas" placeholder="Tiekėjas"></td>
-          <td>
-            <select id="kvalif-vertinimas" data-field="kvalifVertinimas">
-              <option value="">--</option>
-              <option value="Atitinka">Atitinka</option>
-              <option value="Neatitinka">Neatitinka</option>
-              <option value="Netaikomi">Netaikomi</option>
-            </select>
-          </td>
-          <td>
-            <select id="kiti-vertinimas" data-field="kitiVertinimas">
-              <option value="">--</option>
-              <option value="Atitinka">Atitinka</option>
-              <option value="Neatitinka">Neatitinka</option>
-              <option value="Netaikomi">Netaikomi</option>
-            </select>
-          </td>
-          <td><textarea id="kvalif-pastabos" data-field="kvalifPastabos"></textarea></td>
-        </tr>
-      </tbody>
-    </table>
   ` : '');
 
   return `
@@ -1253,25 +1259,26 @@ function renderSection4(formNum) {
 
         <h4 id="pasiulymu-heading" style="font-size:13px; margin:16px 0 8px; color:#003a70;">1 lentelė. Gauti pasiūlymai</h4>
         <div class="helper-box info">
-          Surašyti ekonominio naudingumo mažėjimo (kainos didėjimo) tvarka. <span class="dalis-hint" style="display:none;"><br>Jeigu pirkimas skaidomas į dalis, kiekvienam pasiūlymui pasirinkite atitinkamą objekto dalį – pažymoje pasiūlymai bus grupuojami pagal dalis.</span>
+          Surašyti ekonominio naudingumo mažėjimo (kainos didėjimo) tvarka.
         </div>
-        <table class="data-table" id="pasiulymu-table">
-          <thead>
-            <tr>
-              <th style="width:40px;">Nr.</th>
-              <th class="dalis-col" style="width:140px; display:none;">Pirkimo objekto dalis</th>
-              <th>Tiekėjo pavadinimas</th>
-              <th style="width:120px;">Kaina be PVM</th>
-              <th style="width:120px;">Kaina su PVM</th>
-              <th style="width:90px;">Pasiūlymo vertinimas</th>
-              ${formNum === 1 ? '<th style="width:90px;">Kiti reikalavimai</th>' : ''}
-              <th>Neatitikimo aprašymas</th>
-              <th style="width:60px;"></th>
-            </tr>
-          </thead>
-          <tbody id="pasiulymu-tbody"></tbody>
-        </table>
-        <button type="button" class="add-row-btn" onclick="addPasiulymasRow()">+ Pridėti pasiūlymą</button>
+        <div id="pasiulymai-block">
+          <table class="data-table" id="pasiulymu-table">
+            <thead>
+              <tr>
+                <th style="width:40px;">Nr.</th>
+                <th>Tiekėjo pavadinimas</th>
+                <th style="width:120px;">Kaina be PVM</th>
+                <th style="width:120px;">Kaina su PVM</th>
+                <th style="width:90px;">Pasiūlymo vertinimas</th>
+                ${formNum === 1 ? '<th style="width:90px;">Kiti reikalavimai</th>' : ''}
+                <th>Neatitikimo aprašymas</th>
+                <th style="width:60px;"></th>
+              </tr>
+            </thead>
+            <tbody id="pasiulymu-tbody" class="pasiulymu-tbody"></tbody>
+          </table>
+          <button type="button" class="add-row-btn" onclick="addPasiulymasRow()">+ Pridėti pasiūlymą</button>
+        </div>
 
         ${derybUI}
         ${formNum === 1 ? renderForm1NationalSecurity() : ''}
@@ -1423,16 +1430,20 @@ function renderSection7(formNum) {
         <span class="toggle">▼</span>
       </div>
       <div class="section-body">
-        <div class="field-grid">
-          <div class="field">
-            <label>Sutarties kaina be PVM (Eur)</label>
-            <input type="number" id="sutarties-be-pvm" data-field="sutartiesBePvm" step="0.01" oninput="calcPvm(this);">
+        <div id="sutarties-block">
+          <div class="sut-single" style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+            <div class="field">
+              <label>Sutarties kaina be PVM (Eur)</label>
+              <input type="number" id="sutarties-be-pvm" data-field="sutartiesBePvm" step="0.01" oninput="calcPvm(this);">
+            </div>
+            <div class="field">
+              <label>Sutarties kaina su PVM (Eur)</label>
+              <input type="number" id="sutarties-su-pvm" data-field="sutartiesSuPvm" step="0.01" oninput="calcPvm(this);">
+              <div class="hint">Auto: ×1.21 (21% PVM)</div>
+            </div>
           </div>
-          <div class="field">
-            <label>Sutarties kaina su PVM (Eur)</label>
-            <input type="number" id="sutarties-su-pvm" data-field="sutartiesSuPvm" step="0.01" oninput="calcPvm(this);">
-            <div class="hint">Auto: ×1.21 (21% PVM)</div>
-          </div>
+        </div>
+        <div class="field-grid" style="margin-top:8px;">
           ${kainaTaisykles}
           ${sutartiesType}
           <div id="zodziu-fields" class="conditional">
@@ -1739,13 +1750,19 @@ function validateValue() {
 // ============================================================
 let supplierRowCounter = 0;
 
-function addPasiulymasRow() {
+function addPasiulymasRow(forDalis) {
   supplierRowCounter++;
-  const tbody = document.getElementById('pasiulymu-tbody');
-  const num = tbody.children.length + 1;
+  // Pasirenkam tbody: jei forDalis nurodytas - tos dalies sub-lentelę, kitaip - pagrindinę
+  let tbody;
+  if (forDalis) {
+    tbody = document.querySelector(`#pasiulymai-block .pasiulymu-tbody[data-dalis="${cssEscapeAttr(forDalis)}"]`);
+  }
+  if (!tbody) tbody = document.getElementById('pasiulymu-tbody');
+  if (!tbody) return;
   const tr = document.createElement('tr');
   tr.className = 'supplier-row';
   tr.dataset.id = supplierRowCounter;
+  if (forDalis) tr.dataset.dalis = forDalis;
 
   const kitiCol = currentForm === 1 ? `
     <td>
@@ -1757,20 +1774,13 @@ function addPasiulymasRow() {
     </td>
   ` : '';
 
-  // Pirkimo objekto dalies stulpelis (rodomas tik kai skaidoma)
-  const skaidRadio = document.querySelector('input[name="skaidoma"]:checked');
-  const isSkaid = skaidRadio && skaidRadio.value === 'taip';
-  const dalisCol = `
-    <td class="dalis-col" style="display:${isSkaid ? '' : 'none'};">
-      <select data-field="dalis" onchange="onPasiulymasDalisChange(this); autoFillSprendimai();">
-        <option value="">--</option>
-      </select>
-    </td>
-  `;
+  // Paslėptas dalis laukas - užtikrinam, kad rows neša dalis info
+  const dalisHidden = forDalis
+    ? `<input type="hidden" data-field="dalis" value="${escapeAttr(forDalis)}">`
+    : '';
 
   tr.innerHTML = `
-    <td style="text-align:center;">${num}</td>
-    ${dalisCol}
+    <td style="text-align:center;">${tbody.children.length + 1}${dalisHidden}</td>
     <td><input type="text" data-field="tiekejas" placeholder="Tiekėjo pavadinimas" oninput="onPasiulymasTiekejasChange(this)"></td>
     <td><input type="number" data-field="kainaBePvm" step="0.01" oninput="calcPvm(this); onPasiulymasPriceChange(this);"></td>
     <td><input type="number" data-field="kainaSuPvm" step="0.01" oninput="calcPvm(this); onPasiulymasPriceChange(this);"></td>
@@ -1786,45 +1796,56 @@ function addPasiulymasRow() {
     <td style="text-align:center;"><button type="button" class="btn-small btn-remove" onclick="removeRow(this); syncGalutiniaiFromPasiulymai();">✕</button></td>
   `;
   tbody.appendChild(tr);
-  renumberTable('pasiulymu-tbody');
-  refreshDalisOptionsInOffers();
+  renumberAllPasiulymai();
   syncGalutiniaiFromPasiulymai();
 }
 
-// Kai keičiasi pasiūlymo dalis - persikelia ir į susietą galutinio pasiūlymo eilutę
-function onPasiulymasDalisChange(sel) {
-  const tr = sel.closest('tr');
-  if (!tr) return;
-  const id = tr.dataset.id;
-  if (!id) return;
-  const galTbody = document.getElementById('galutiniai-tbody');
-  if (!galTbody) return;
-  const galTr = galTbody.querySelector(`tr[data-linked-id="${id}"]`);
-  if (galTr) {
-    const galSel = galTr.querySelector('[data-field="dalis"]');
-    if (galSel) galSel.value = sel.value;
-  }
+// CSS atribute escape (kabučiams)
+function cssEscapeAttr(s) {
+  return String(s || '').replace(/(["\\])/g, '\\$1');
 }
 
-function addGalutinisRow() {
-  const tbody = document.getElementById('galutiniai-tbody');
+// Perrenumeruoja visas pasiūlymų lenteles (kiekvieną sub-lentelę atskirai)
+function renumberAllPasiulymai() {
+  document.querySelectorAll('.pasiulymu-tbody').forEach(tbody => {
+    Array.from(tbody.children).forEach((row, idx) => {
+      // Pirma cell - numeris + (galimas) hidden input
+      const numCell = row.children[0];
+      // Išsaugom hidden inputs ir prependuojam tekstą
+      const hidden = numCell.querySelector('input[type="hidden"]');
+      numCell.textContent = String(idx + 1);
+      if (hidden) numCell.appendChild(hidden);
+    });
+  });
+}
+
+function renumberAllGalutiniai() {
+  document.querySelectorAll('.galutiniai-tbody').forEach(tbody => {
+    Array.from(tbody.children).forEach((row, idx) => {
+      const numCell = row.children[0];
+      const hidden = numCell.querySelector('input[type="hidden"]');
+      numCell.textContent = String(idx + 1);
+      if (hidden) numCell.appendChild(hidden);
+    });
+  });
+}
+
+function addGalutinisRow(forDalis) {
+  let tbody;
+  if (forDalis) {
+    tbody = document.querySelector(`#galutiniai-block .galutiniai-tbody[data-dalis="${cssEscapeAttr(forDalis)}"]`);
+  }
+  if (!tbody) tbody = document.getElementById('galutiniai-tbody');
   if (!tbody) return;
   const tr = document.createElement('tr');
+  if (forDalis) tr.dataset.dalis = forDalis;
 
-  // Pirkimo objekto dalies stulpelis (rodomas tik kai skaidoma)
-  const skaidRadio = document.querySelector('input[name="skaidoma"]:checked');
-  const isSkaid = skaidRadio && skaidRadio.value === 'taip';
-  const dalisCol = `
-    <td class="dalis-col" style="display:${isSkaid ? '' : 'none'};">
-      <select data-field="dalis" disabled style="background:#f9fafb;" title="Dalis perimama iš 1 lentelės">
-        <option value="">--</option>
-      </select>
-    </td>
-  `;
+  const dalisHidden = forDalis
+    ? `<input type="hidden" data-field="dalis" value="${escapeAttr(forDalis)}">`
+    : '';
 
   tr.innerHTML = `
-    <td style="text-align:center;">${tbody.children.length + 1}</td>
-    ${dalisCol}
+    <td style="text-align:center;">${tbody.children.length + 1}${dalisHidden}</td>
     <td><input type="text" data-field="tiekejas" placeholder="Tiekėjas (auto - iš 1 lentelės)" readonly style="background:#f9fafb; color:#374151;" oninput="onGalutiniTiekejasChange(this); autoFillSprendimai();"></td>
     <td style="text-align:center;">
       <input type="checkbox" data-field="nepateikGalutinio" onchange="toggleNepateikGalutinio(this); autoFillSprendimai();" title="Nepateikė galutinio - pirminis laikomas galutiniu">
@@ -1842,8 +1863,7 @@ function addGalutinisRow() {
     <td style="text-align:center;"><button type="button" class="btn-small btn-remove" onclick="removeRow(this); autoFillSprendimai();">✕</button></td>
   `;
   tbody.appendChild(tr);
-  renumberTable('galutiniai-tbody');
-  refreshDalisOptionsInOffers();
+  renumberAllGalutiniai();
 }
 
 // Pažymėjus "nepateikė galutinio" - perimam kainas iš pirminio pasiūlymo lentelės pagal tiekėjo pavadinimą
@@ -1921,164 +1941,229 @@ function onPasiulymasPriceChange(input) {
 function syncGalutiniaiFromPasiulymai() {
   const derybRadio = document.querySelector('input[name="derybos"]:checked');
   if (!derybRadio || derybRadio.value !== 'Vykdomos') return;
-  const galTbody = document.getElementById('galutiniai-tbody');
-  const pasTbody = document.getElementById('pasiulymu-tbody');
-  if (!galTbody || !pasTbody) return;
 
-  // Pirminių pasiūlymų eilučių info su jų ID
-  const pasRows = Array.from(pasTbody.children).map(tr => ({
-    id: String(tr.dataset.id || ''),
-    name: (tr.querySelector('[data-field="tiekejas"]')?.value || '').trim(),
-    dalis: tr.querySelector('[data-field="dalis"]')?.value || ''
-  })).filter(p => p.id); // tik su ID
+  // Surenkam visus pirminius pasiūlymus iš visų sub-lentelių
+  const pasRows = [];
+  document.querySelectorAll('.pasiulymu-tbody').forEach(tbody => {
+    const tbodyDalis = tbody.dataset.dalis || '';
+    Array.from(tbody.children).forEach(tr => {
+      const id = String(tr.dataset.id || '');
+      if (!id) return;
+      const tiekejasInput = tr.querySelector('[data-field="tiekejas"]');
+      const dalisInput = tr.querySelector('[data-field="dalis"]');
+      pasRows.push({
+        id,
+        name: (tiekejasInput?.value || '').trim(),
+        dalis: (dalisInput?.value || tbodyDalis || '')
+      });
+    });
+  });
 
-  // Esami galutinių pasiūlymai su jų susiejimo ID
+  // Surenkam esamas galutinių eilutes pagal linkedId per visas sub-lenteles
   const galByLinkedId = {};
-  for (const tr of galTbody.children) {
-    const linkedId = String(tr.dataset.linkedId || '');
-    if (linkedId) galByLinkedId[linkedId] = tr;
-  }
+  document.querySelectorAll('.galutiniai-tbody').forEach(tbody => {
+    Array.from(tbody.children).forEach(tr => {
+      const linkedId = String(tr.dataset.linkedId || '');
+      if (linkedId) galByLinkedId[linkedId] = tr;
+    });
+  });
 
-  // Atnaujinam galutinių lentelę pagal pirminių sąrašą
+  const dalys = getCurrentDalys();
   const newGalRows = [];
+
   pasRows.forEach(pas => {
     let galTr = galByLinkedId[pas.id];
-    if (!galTr) {
-      // Sukuriam naują eilutę su susiejimu
-      addGalutinisRow();
-      galTr = galTbody.lastElementChild;
-      galTr.dataset.linkedId = pas.id;
+    // Jei galutinė eilutė egzistuoja, bet yra netinkamoje sub-lentelėje (dalis nesutampa) - perkelti
+    if (galTr) {
+      const curTbody = galTr.parentElement;
+      const curDalis = curTbody?.dataset.dalis || '';
+      const needsMove = dalys && (curDalis !== pas.dalis);
+      if (needsMove) {
+        galTr.remove();
+        galTr = null; // bus pridėta į teisingą sub-lentelę
+      }
     }
+    if (!galTr) {
+      // Sukuriam naują eilutę su susiejimu - tinkamai pagal dalis
+      const forDalis = dalys ? pas.dalis : undefined;
+      addGalutinisRow(forDalis);
+      // addGalutinisRow paskutinė nauja eilutė
+      const targetTbody = forDalis
+        ? document.querySelector(`#galutiniai-block .galutiniai-tbody[data-dalis="${cssEscapeAttr(forDalis)}"]`)
+        : document.getElementById('galutiniai-tbody');
+      if (!targetTbody) return;
+      galTr = targetTbody.lastElementChild;
+      if (galTr) galTr.dataset.linkedId = pas.id;
+    }
+    if (!galTr) return;
     // Atnaujinam pavadinimą jei pasikeitęs
     const tiekejasInput = galTr.querySelector('[data-field="tiekejas"]');
     if (tiekejasInput && tiekejasInput.value !== pas.name) {
       tiekejasInput.value = pas.name;
-      // Jei "nepateikė galut" pažymėtas - perimti naujas kainas iš pirminio
       const cb = galTr.querySelector('[data-field="nepateikGalutinio"]');
       if (cb && cb.checked) toggleNepateikGalutinio(cb);
-    }
-    // Perduodam ir objekto dalį (galutiniai paveldi iš pirminių)
-    const galDalisSel = galTr.querySelector('[data-field="dalis"]');
-    if (galDalisSel && galDalisSel.value !== pas.dalis) {
-      // Įsitikinam, kad opcija egzistuoja
-      if (pas.dalis && !Array.from(galDalisSel.options).some(o => o.value === pas.dalis)) {
-        const opt = document.createElement('option');
-        opt.value = pas.dalis;
-        opt.textContent = pas.dalis;
-        galDalisSel.appendChild(opt);
-      }
-      galDalisSel.value = pas.dalis;
     }
     newGalRows.push(galTr);
   });
 
-  // Pašalinam tik tas galutinių eilutes, kurios anksčiau buvo susijusios su jau pašalintu pirminių pasiūlymu
-  // (rankomis pridėtas eilutes be linkedId paliekam)
-  Array.from(galTbody.children).forEach(tr => {
+  // Pašalinam galutinių eilutes, kurios anksčiau buvo susijusios su pašalintu pirminių pasiūlymu
+  document.querySelectorAll('.galutiniai-tbody tr').forEach(tr => {
     if (!newGalRows.includes(tr) && tr.dataset.linkedId) tr.remove();
   });
 
-  // Užtikrinam, kad sinchronizuotos eilutės būtų pradžioje, eilėje pagal pirminių
-  newGalRows.forEach(tr => galTbody.appendChild(tr));
-
-  renumberTable('galutiniai-tbody');
+  renumberAllGalutiniai();
   autoFillSprendimai();
+  autoFillGalimasLaimetojas();
+}
+
+// Pagalbinė: grąžina vertinimo ir kainų laukų pavadinimus pagal derybų būseną
+function _getOfferFieldKeys() {
+  const derybRadio = document.querySelector('input[name="derybos"]:checked');
+  const isDeryb = derybRadio && derybRadio.value === 'Vykdomos';
+  return {
+    isDeryb,
+    vertField: isDeryb ? 'galVert' : 'pasiulVert',
+    beField: isDeryb ? 'galKainaBePvm' : 'kainaBePvm',
+    suField: isDeryb ? 'galKainaSuPvm' : 'kainaSuPvm'
+  };
+}
+
+// Pagalbinė: grąžina visus pasiūlymus iš atitinkamų lentelių (visos sub-lentelės sujungtos)
+// Jei optionalDalis nurodytas - grąžina tik tos dalies pasiūlymus
+function _collectOffersForAuto(optionalDalis) {
+  const { isDeryb } = _getOfferFieldKeys();
+  const tbodyClass = isDeryb ? '.galutiniai-tbody' : '.pasiulymu-tbody';
+  const items = [];
+  document.querySelectorAll(tbodyClass).forEach(tbody => {
+    const tbodyDalis = tbody.dataset.dalis || '';
+    Array.from(tbody.children).forEach(tr => {
+      const dalisInput = tr.querySelector('[data-field="dalis"]');
+      const rowDalis = (dalisInput?.value || tbodyDalis || '').trim();
+      if (optionalDalis !== undefined && rowDalis !== optionalDalis) return;
+      const { vertField, beField, suField } = _getOfferFieldKeys();
+      const name = (tr.querySelector('[data-field="tiekejas"]')?.value || '').trim();
+      const vert = tr.querySelector(`[data-field="${vertField}"]`)?.value || '';
+      const beStr = tr.querySelector(`[data-field="${beField}"]`)?.value || '';
+      const suStr = tr.querySelector(`[data-field="${suField}"]`)?.value || '';
+      const price = parseFloat(beStr);
+      items.push({ name, vert, price, beStr, suStr, dalis: rowDalis });
+    });
+  });
+  return items;
 }
 
 // AUTO-FILL: užpildo Sprendimų skyriaus laukus pagal galutinius (arba pirminius, jei nėra derybų) "Atitinka" pasiūlymus
 function autoFillSprendimai() {
+  // Galimo laimėtojo užpildymas dirba visada (nepriklausomai nuo scenarijaus)
+  autoFillGalimasLaimetojas();
+
   const scenSel = document.getElementById('sprendimo-scenarijus');
-  if (!scenSel || scenSel.value !== 'sutartis') return; // tik scenarijui "Sudaroma sutartis"
+  if (!scenSel || scenSel.value !== 'sutartis') return;
 
-  const derybRadio = document.querySelector('input[name="derybos"]:checked');
-  const isDeryb = derybRadio && derybRadio.value === 'Vykdomos';
+  // Pasiūlymų eilė ir laimėtojas (vienas, jei nesusiskaido į dalis)
+  const dalys = getCurrentDalys();
+  const allItems = _collectOffersForAuto();
+  const atitinkantysItems = allItems
+    .filter(it => it.name && it.vert === 'Atitinka' && !isNaN(it.price))
+    .sort((a, b) => a.price - b.price);
 
-  // Pasirenkam šaltinio lentelę
-  const tbody = document.getElementById(isDeryb ? 'galutiniai-tbody' : 'pasiulymu-tbody');
-  if (!tbody) return;
+  if (atitinkantysItems.length === 0) return;
 
-  // Surinkim "Atitinka" pasiūlymus su tiekėjais ir kainomis
-  const vertField = isDeryb ? 'galVert' : 'pasiulVert';
-  const beField = isDeryb ? 'galKainaBePvm' : 'kainaBePvm';
-  const items = [];
-  for (const tr of tbody.children) {
-    const name = (tr.querySelector('[data-field="tiekejas"]')?.value || '').trim();
-    const vert = tr.querySelector(`[data-field="${vertField}"]`)?.value || '';
-    const priceStr = tr.querySelector(`[data-field="${beField}"]`)?.value || '';
-    const price = parseFloat(priceStr);
-    if (name && vert === 'Atitinka' && !isNaN(price)) {
-      items.push({ name, price });
-    }
+  // Pasiūlymų eilė
+  let eile;
+  if (dalys) {
+    // Grupuojam pagal dalis
+    const lines = [];
+    dalys.forEach(d => {
+      const partItems = atitinkantysItems.filter(it => it.dalis === d.name);
+      if (partItems.length === 0) return;
+      lines.push(`${d.idx} dalis. ${d.name}:`);
+      partItems.forEach((it, i) => {
+        lines.push(`  ${i+1}. ${it.name} - ${formatEurNum(it.price)} Eur be PVM`);
+      });
+    });
+    eile = lines.join('\n');
+  } else {
+    eile = atitinkantysItems.map((it, i) => `${i+1}. ${it.name} - ${formatEurNum(it.price)} Eur be PVM`).join('\n');
   }
-  if (items.length === 0) return;
-
-  // Rūšiuojam pagal kainą didėjančia tvarka (mažesnė kaina = ekonomiškai naudingiau)
-  items.sort((a, b) => a.price - b.price);
-
-  // Pildom pasiūlymų eilę
-  const eile = items.map((it, i) => `${i+1}. ${it.name} - ${formatEurNum(it.price)} Eur be PVM`).join('\n');
   const eileField = document.getElementById('pasiulymu-eile');
   if (eileField) eileField.value = eile;
 
-  // Pildom laimėtoją (pigiausias Atitinka)
-  const winnerName = items[0].name;
+  // Laimėtojas (pirmasis pigiausias bendrai arba per dalis)
+  const winnerName = atitinkantysItems[0].name;
   const laimetojasField = document.getElementById('laimetojas');
   if (laimetojasField) laimetojasField.value = winnerName;
 
-  // Form 2: užpildom "Galimas laimėtojas" lauką ir Kvalifikacijos lentelės tiekėjo pavadinimą
-  const galimasLaimField = document.getElementById('galimas-laimetojas');
-  if (galimasLaimField) galimasLaimField.value = winnerName;
-  const kvalifTiekField = document.getElementById('kvalif-tiekejas');
-  if (kvalifTiekField) kvalifTiekField.value = winnerName;
-
-  // Taip pat užpildom Sutarties kainą, jei pažymėta "kaina lygi laimėjusio"
   autoFillSutartiesKaina();
 }
 
-// AUTO-FILL Sutarties kainos pagal laimėtojo pasiūlymą
-// Veikia kai pažymėtas "Sutarties kaina lygi laimėjusio pasiūlymo kainai"
+// AUTO-FILL: Galimas laimėtojas + kvalifikacijos lentelė
+// Veikia visada, kai galima identifikuoti laimėtoją (-us)
+function autoFillGalimasLaimetojas() {
+  const dalys = getCurrentDalys();
+  if (dalys) {
+    // Per kiekvieną dalį
+    dalys.forEach(d => {
+      const items = _collectOffersForAuto(d.name)
+        .filter(it => it.name && it.vert === 'Atitinka' && !isNaN(it.price))
+        .sort((a, b) => a.price - b.price);
+      if (items.length === 0) return;
+      const winner = items[0].name;
+      const dataKey = d.name.replace(/[^a-zA-Z0-9_]/g, '_');
+      const laimEl = document.querySelector(`[data-field="galimasLaimetojas__${dataKey}"]`);
+      if (laimEl) laimEl.value = winner;
+      const tiekEl = document.querySelector(`[data-field="kvalifTiekejas__${dataKey}"]`);
+      if (tiekEl) tiekEl.value = winner;
+    });
+  } else {
+    // Single mode
+    const items = _collectOffersForAuto()
+      .filter(it => it.name && it.vert === 'Atitinka' && !isNaN(it.price))
+      .sort((a, b) => a.price - b.price);
+    if (items.length === 0) return;
+    const winner = items[0].name;
+    const laimEl = document.getElementById('galimas-laimetojas');
+    if (laimEl) laimEl.value = winner;
+    const tiekEl = document.getElementById('kvalif-tiekejas');
+    if (tiekEl) tiekEl.value = winner;
+  }
+}
+
+// AUTO-FILL Sutarties kainos pagal laimėtojo pasiūlymą - per dalis arba single
 function autoFillSutartiesKaina() {
   // Patikrinam ar pažymėta "lygi laimėjusio pasiūlymo kainai"
   let useWinnerPrice = false;
-  // Forma 1: checkbox kainaLygiLaimejusio
   const cb = document.querySelector('[data-field="kainaLygiLaimejusio"]');
   if (cb && cb.checked) useWinnerPrice = true;
-  // Forma 2: radio kainosTipas=laimejusi
   const radio = document.querySelector('input[name="kainosTipas"]:checked');
   if (radio && radio.value === 'laimejusi') useWinnerPrice = true;
   if (!useWinnerPrice) return;
 
-  // Šaltinio lentelė priklauso nuo derybų
-  const derybRadio = document.querySelector('input[name="derybos"]:checked');
-  const isDeryb = derybRadio && derybRadio.value === 'Vykdomos';
-  const tbody = document.getElementById(isDeryb ? 'galutiniai-tbody' : 'pasiulymu-tbody');
-  if (!tbody) return;
-
-  const vertField = isDeryb ? 'galVert' : 'pasiulVert';
-  const beField = isDeryb ? 'galKainaBePvm' : 'kainaBePvm';
-  const suField = isDeryb ? 'galKainaSuPvm' : 'kainaSuPvm';
-
-  // Surandam pigiausią Atitinka pasiūlymą
-  let bestBe = null;
-  let bestSu = null;
-  let bestPrice = Infinity;
-  for (const tr of tbody.children) {
-    const vert = tr.querySelector(`[data-field="${vertField}"]`)?.value || '';
-    const beStr = tr.querySelector(`[data-field="${beField}"]`)?.value || '';
-    const suStr = tr.querySelector(`[data-field="${suField}"]`)?.value || '';
-    const price = parseFloat(beStr);
-    if (vert === 'Atitinka' && !isNaN(price) && price < bestPrice) {
-      bestPrice = price;
-      bestBe = beStr;
-      bestSu = suStr;
-    }
+  const dalys = getCurrentDalys();
+  if (dalys) {
+    dalys.forEach(d => {
+      const items = _collectOffersForAuto(d.name)
+        .filter(it => it.vert === 'Atitinka' && !isNaN(it.price))
+        .sort((a, b) => a.price - b.price);
+      if (items.length === 0) return;
+      const best = items[0];
+      const dataKey = d.name.replace(/[^a-zA-Z0-9_]/g, '_');
+      const beEl = document.querySelector(`[data-field="sutartiesBePvm__${dataKey}"]`);
+      const suEl = document.querySelector(`[data-field="sutartiesSuPvm__${dataKey}"]`);
+      if (beEl) beEl.value = best.beStr;
+      if (suEl) suEl.value = best.suStr;
+    });
+  } else {
+    const items = _collectOffersForAuto()
+      .filter(it => it.vert === 'Atitinka' && !isNaN(it.price))
+      .sort((a, b) => a.price - b.price);
+    if (items.length === 0) return;
+    const best = items[0];
+    const sutartBe = document.getElementById('sutarties-be-pvm');
+    const sutartSu = document.getElementById('sutarties-su-pvm');
+    if (sutartBe) sutartBe.value = best.beStr;
+    if (sutartSu) sutartSu.value = best.suStr;
   }
-  if (bestBe === null) return;
-
-  const sutartBe = document.getElementById('sutarties-be-pvm');
-  const sutartSu = document.getElementById('sutarties-su-pvm');
-  if (sutartBe) sutartBe.value = bestBe;
-  if (sutartSu) sutartSu.value = bestSu;
 }
 
 function addNatSaugRow() {
@@ -2128,7 +2213,423 @@ function addDalis() {
 // Centrinis kvietėjas, kai keičiasi dalys arba pasiūlymai pagal dalis
 function onDalisChange() {
   validateDalysVerte();
-  refreshDalisOptionsInOffers();
+  restructureOfferTables();
+  restructureKvalifBlock();
+  restructureSutartiesBlock();
+}
+
+// Grąžina einamųjų dalių sąrašą [{idx, name}, ...] arba null jei pirkimas neskaidomas
+function getCurrentDalys() {
+  const radio = document.querySelector('input[name="skaidoma"]:checked');
+  if (!radio || radio.value !== 'taip') return null;
+  const rows = document.querySelectorAll('#dalys-tbody tr');
+  if (rows.length === 0) return null;
+  return Array.from(rows).map((tr, idx) => {
+    const inp = tr.querySelector('[data-field="dalisPav"]');
+    const name = (inp && inp.value.trim()) || `${idx+1} dalis`;
+    return { idx: idx+1, name };
+  });
+}
+
+// Surenka visus pirminius pasiūlymus iš visų sub-lentelių
+function collectAllPasiulymai() {
+  const all = [];
+  document.querySelectorAll('.pasiulymu-tbody').forEach(tbody => {
+    const tbodyDalis = tbody.dataset.dalis || '';
+    Array.from(tbody.children).forEach(tr => {
+      const data = { _id: tr.dataset.id || '' };
+      tr.querySelectorAll('[data-field]').forEach(el => {
+        data[el.dataset.field] = el.type === 'checkbox' ? el.checked : el.value;
+      });
+      if (!data.dalis) data.dalis = tbodyDalis;
+      all.push(data);
+    });
+  });
+  return all;
+}
+
+function collectAllGalutiniai() {
+  const all = [];
+  document.querySelectorAll('.galutiniai-tbody').forEach(tbody => {
+    const tbodyDalis = tbody.dataset.dalis || '';
+    Array.from(tbody.children).forEach(tr => {
+      const data = { _linkedId: tr.dataset.linkedId || '' };
+      tr.querySelectorAll('[data-field]').forEach(el => {
+        data[el.dataset.field] = el.type === 'checkbox' ? el.checked : el.value;
+      });
+      if (!data.dalis) data.dalis = tbodyDalis;
+      all.push(data);
+    });
+  });
+  return all;
+}
+
+// Pertvarko pasiūlymų ir galutinių pasiūlymų UI - vienetinė lentelė arba sub-lentelės pagal dalis
+function restructureOfferTables() {
+  const pasBlock = document.getElementById('pasiulymai-block');
+  const galBlock = document.getElementById('galutiniai-block');
+  if (!pasBlock || !galBlock) return;
+
+  // Išsaugom esamus duomenis
+  const savedPas = collectAllPasiulymai();
+  const savedGal = collectAllGalutiniai();
+
+  const dalys = getCurrentDalys();
+  const formNum = currentForm;
+  const derybRadio = document.querySelector('input[name="derybos"]:checked');
+  const isDeryb = derybRadio && derybRadio.value === 'Vykdomos';
+  const lent1Suffix = isDeryb ? 'Gauti pirminiai pasiūlymai' : 'Gauti pasiūlymai';
+
+  if (!dalys) {
+    // Single mode - pagrindinė lentelė
+    pasBlock.innerHTML = `
+      <table class="data-table" id="pasiulymu-table">
+        <thead>
+          <tr>
+            <th style="width:40px;">Nr.</th>
+            <th>Tiekėjo pavadinimas</th>
+            <th style="width:120px;">Kaina be PVM</th>
+            <th style="width:120px;">Kaina su PVM</th>
+            <th style="width:90px;">Pasiūlymo vertinimas</th>
+            ${formNum === 1 ? '<th style="width:90px;">Kiti reikalavimai</th>' : ''}
+            <th>Neatitikimo aprašymas</th>
+            <th style="width:60px;"></th>
+          </tr>
+        </thead>
+        <tbody id="pasiulymu-tbody" class="pasiulymu-tbody"></tbody>
+      </table>
+      <button type="button" class="add-row-btn" onclick="addPasiulymasRow()">+ Pridėti pasiūlymą</button>
+    `;
+    galBlock.innerHTML = `
+      <table class="data-table" id="galutiniai-table">
+        <thead>
+          <tr>
+            <th style="width:40px;">Nr.</th>
+            <th>Tiekėjo pavadinimas</th>
+            <th style="width:130px;">Nepateikė galut. pas.<br><span style="font-weight:normal;font-size:10px;">(pirminis = galutinis)</span></th>
+            <th style="width:130px;">Galutinė kaina be PVM</th>
+            <th style="width:130px;">Galutinė kaina su PVM</th>
+            <th style="width:90px;">Vertinimas</th>
+            <th>Neatitikimas</th>
+            <th style="width:60px;"></th>
+          </tr>
+        </thead>
+        <tbody id="galutiniai-tbody" class="galutiniai-tbody"></tbody>
+      </table>
+    `;
+    // Atstatom duomenis
+    savedPas.forEach(d => populatePasiulymasFromData(d));
+    savedGal.forEach(d => populateGalutiniaiFromData(d));
+  } else {
+    // Sub-table mode pagal dalis
+    pasBlock.innerHTML = dalys.map(d => buildPasiulymaiSubBlockHTML(d, formNum, lent1Suffix)).join('');
+    galBlock.innerHTML = dalys.map(d => buildGalutiniaiSubBlockHTML(d, formNum)).join('');
+
+    // Distribuojam savedPas pagal dalis
+    savedPas.forEach(d => {
+      // Jei rows dalis tuščia - palikti unassigned (į "Be priskirtos dalies" sub-bloką, kuris dabar dar nesukuriamas)
+      // Pirma bandom įdėti į esamą dalies sub-bloką
+      const targetDalis = (d.dalis || '').trim();
+      const known = dalys.some(x => x.name === targetDalis);
+      if (known) {
+        populatePasiulymasFromData(d, targetDalis);
+      } else {
+        // Įdedam į pirmą dalį, jeigu dalis nežinoma
+        populatePasiulymasFromData(d, dalys[0].name);
+      }
+    });
+    savedGal.forEach(d => {
+      const targetDalis = (d.dalis || '').trim();
+      const known = dalys.some(x => x.name === targetDalis);
+      if (known) {
+        populateGalutiniaiFromData(d, targetDalis);
+      } else {
+        populateGalutiniaiFromData(d, dalys[0].name);
+      }
+    });
+  }
+
+  // Po restruktūrizavimo - sinchronizuokim galutinius su pirminiais (jei vyksta derybos)
+  syncGalutiniaiFromPasiulymai();
+}
+
+// Subbloko HTML pirminiams pasiūlymams
+function buildPasiulymaiSubBlockHTML(dalis, formNum, lent1Suffix) {
+  const safe = escapeAttr(dalis.name);
+  const safeJs = String(dalis.name).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  return `
+    <div class="dalis-subblock" data-dalis="${safe}" style="margin-top:20px; padding:14px 16px 16px; background:var(--color-green-5); border:1px solid var(--color-green-15); border-radius:8px;">
+      <h5 style="font-size:13px; margin:0 0 10px; color:var(--color-emerald-120); font-weight:700;">${dalis.idx} dalis. ${escapeHtml(dalis.name)} — ${escapeHtml(lent1Suffix)}</h5>
+      <table class="data-table" style="background:#fff;">
+        <thead>
+          <tr>
+            <th style="width:40px;">Nr.</th>
+            <th>Tiekėjo pavadinimas</th>
+            <th style="width:120px;">Kaina be PVM</th>
+            <th style="width:120px;">Kaina su PVM</th>
+            <th style="width:90px;">Pasiūlymo vertinimas</th>
+            ${formNum === 1 ? '<th style="width:90px;">Kiti reikalavimai</th>' : ''}
+            <th>Neatitikimo aprašymas</th>
+            <th style="width:60px;"></th>
+          </tr>
+        </thead>
+        <tbody class="pasiulymu-tbody" data-dalis="${safe}"></tbody>
+      </table>
+      <button type="button" class="add-row-btn" onclick="addPasiulymasRow('${safeJs}')">+ Pridėti pasiūlymą</button>
+    </div>
+  `;
+}
+
+// Subbloko HTML galutiniams pasiūlymams
+function buildGalutiniaiSubBlockHTML(dalis, formNum) {
+  const safe = escapeAttr(dalis.name);
+  return `
+    <div class="dalis-subblock" data-dalis="${safe}" style="margin-top:20px; padding:14px 16px 16px; background:var(--color-green-5); border:1px solid var(--color-green-15); border-radius:8px;">
+      <h5 style="font-size:13px; margin:0 0 10px; color:var(--color-emerald-120); font-weight:700;">${dalis.idx} dalis. ${escapeHtml(dalis.name)} — Gauti galutiniai pasiūlymai</h5>
+      <table class="data-table" style="background:#fff;">
+        <thead>
+          <tr>
+            <th style="width:40px;">Nr.</th>
+            <th>Tiekėjo pavadinimas</th>
+            <th style="width:130px;">Nepateikė galut. pas.<br><span style="font-weight:normal;font-size:10px;">(pirminis = galutinis)</span></th>
+            <th style="width:130px;">Galutinė kaina be PVM</th>
+            <th style="width:130px;">Galutinė kaina su PVM</th>
+            <th style="width:90px;">Vertinimas</th>
+            <th>Neatitikimas</th>
+            <th style="width:60px;"></th>
+          </tr>
+        </thead>
+        <tbody class="galutiniai-tbody" data-dalis="${safe}"></tbody>
+      </table>
+    </div>
+  `;
+}
+
+// Įkelia pasiūlymo duomenis į atitinkamos dalies sub-lentelę (arba pagrindinę)
+function populatePasiulymasFromData(d, forDalis) {
+  addPasiulymasRow(forDalis);
+  const tbody = forDalis
+    ? document.querySelector(`#pasiulymai-block .pasiulymu-tbody[data-dalis="${cssEscapeAttr(forDalis)}"]`)
+    : document.getElementById('pasiulymu-tbody');
+  if (!tbody) return;
+  const tr = tbody.lastElementChild;
+  if (!tr) return;
+  Object.keys(d).forEach(k => {
+    if (k.startsWith('_')) return;
+    if (k === 'dalis') return; // jau nustatyta hidden input
+    const el = tr.querySelector(`[data-field="${k}"]`);
+    if (!el) return;
+    if (el.type === 'checkbox') el.checked = !!d[k];
+    else el.value = d[k] != null ? d[k] : '';
+  });
+  if (d._id) tr.dataset.id = d._id;
+}
+
+function populateGalutiniaiFromData(d, forDalis) {
+  addGalutinisRow(forDalis);
+  const tbody = forDalis
+    ? document.querySelector(`#galutiniai-block .galutiniai-tbody[data-dalis="${cssEscapeAttr(forDalis)}"]`)
+    : document.getElementById('galutiniai-tbody');
+  if (!tbody) return;
+  const tr = tbody.lastElementChild;
+  if (!tr) return;
+  Object.keys(d).forEach(k => {
+    if (k.startsWith('_')) return;
+    if (k === 'dalis') return;
+    const el = tr.querySelector(`[data-field="${k}"]`);
+    if (!el) return;
+    if (el.type === 'checkbox') el.checked = !!d[k];
+    else el.value = d[k] != null ? d[k] : '';
+  });
+  if (d._linkedId) tr.dataset.linkedId = d._linkedId;
+}
+
+// Pertvarko kvalifikacijos vertinimo bloką pagal dalis
+function restructureKvalifBlock() {
+  const block = document.getElementById('kvalif-block');
+  if (!block) return; // tik form 2
+  const dalys = getCurrentDalys();
+
+  // Išsaugom esamus kvalif duomenis
+  const saved = {};
+  if (dalys) {
+    // Jei jau buvo sub-blokai - perimame iš jų pagal dalis
+    block.querySelectorAll('.kvalif-subblock').forEach(sub => {
+      const dn = sub.dataset.dalis;
+      saved[dn] = {
+        laimet: sub.querySelector('[data-field^="galimasLaimetojas__"]')?.value || '',
+        tiek: sub.querySelector('[data-field^="kvalifTiekejas__"]')?.value || '',
+        vert: sub.querySelector('[data-field^="kvalifVertinimas__"]')?.value || '',
+        kiti: sub.querySelector('[data-field^="kitiVertinimas__"]')?.value || '',
+        pas: sub.querySelector('[data-field^="kvalifPastabos__"]')?.value || ''
+      };
+    });
+  }
+  // Standartinio bloko (single) duomenys
+  const singleData = {
+    laimet: document.getElementById('galimas-laimetojas')?.value || '',
+    tiek: document.getElementById('kvalif-tiekejas')?.value || '',
+    vert: document.getElementById('kvalif-vertinimas')?.value || '',
+    kiti: document.getElementById('kiti-vertinimas')?.value || '',
+    pas: document.getElementById('kvalif-pastabos')?.value || ''
+  };
+
+  if (!dalys) {
+    // Single mode
+    block.innerHTML = `
+      <div class="kvalif-single">
+        <div class="field full-row">
+          <label>Galimas laimėtojas</label>
+          <input type="text" id="galimas-laimetojas" data-field="galimasLaimetojas" placeholder="Tiekėjo pavadinimas" value="${escapeAttr(singleData.laimet)}">
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Pavadinimas</th>
+              <th style="width:120px;">Kvalifikacija</th>
+              <th style="width:120px;">Kiti reikalavimai</th>
+              <th>Pastabos</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input type="text" id="kvalif-tiekejas" data-field="kvalifTiekejas" placeholder="Tiekėjas" value="${escapeAttr(singleData.tiek)}"></td>
+              <td>
+                <select id="kvalif-vertinimas" data-field="kvalifVertinimas">
+                  <option value="">--</option>
+                  <option value="Atitinka"${singleData.vert==='Atitinka'?' selected':''}>Atitinka</option>
+                  <option value="Neatitinka"${singleData.vert==='Neatitinka'?' selected':''}>Neatitinka</option>
+                  <option value="Netaikomi"${singleData.vert==='Netaikomi'?' selected':''}>Netaikomi</option>
+                </select>
+              </td>
+              <td>
+                <select id="kiti-vertinimas" data-field="kitiVertinimas">
+                  <option value="">--</option>
+                  <option value="Atitinka"${singleData.kiti==='Atitinka'?' selected':''}>Atitinka</option>
+                  <option value="Neatitinka"${singleData.kiti==='Neatitinka'?' selected':''}>Neatitinka</option>
+                  <option value="Netaikomi"${singleData.kiti==='Netaikomi'?' selected':''}>Netaikomi</option>
+                </select>
+              </td>
+              <td><textarea id="kvalif-pastabos" data-field="kvalifPastabos">${escapeHtml(singleData.pas)}</textarea></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    `;
+  } else {
+    // Sub-blokai pagal dalis
+    block.innerHTML = dalys.map(d => {
+      const dn = d.name;
+      const s = saved[dn] || { laimet: '', tiek: '', vert: '', kiti: '', pas: '' };
+      const safe = escapeAttr(dn);
+      const dataKey = dn.replace(/[^a-zA-Z0-9_]/g, '_');
+      return `
+        <div class="kvalif-subblock" data-dalis="${safe}" style="margin-top:16px; padding:14px 16px; background:var(--color-green-5); border:1px solid var(--color-green-15); border-radius:8px;">
+          <h5 style="font-size:13px; margin:0 0 10px; color:var(--color-emerald-120); font-weight:700;">${d.idx} dalis. ${escapeHtml(dn)} — Galimas laimėtojas</h5>
+          <div class="field full-row" style="margin-bottom:10px;">
+            <label>Galimas laimėtojas</label>
+            <input type="text" class="kvalif-laimet" data-field="galimasLaimetojas__${dataKey}" data-dalis="${safe}" placeholder="Tiekėjo pavadinimas (auto)" value="${escapeAttr(s.laimet)}">
+          </div>
+          <table class="data-table" style="background:#fff;">
+            <thead>
+              <tr>
+                <th>Pavadinimas</th>
+                <th style="width:120px;">Kvalifikacija</th>
+                <th style="width:120px;">Kiti reikalavimai</th>
+                <th>Pastabos</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input type="text" class="kvalif-tiek" data-field="kvalifTiekejas__${dataKey}" data-dalis="${safe}" placeholder="Tiekėjas (auto)" value="${escapeAttr(s.tiek)}"></td>
+                <td>
+                  <select data-field="kvalifVertinimas__${dataKey}" data-dalis="${safe}">
+                    <option value="">--</option>
+                    <option value="Atitinka"${s.vert==='Atitinka'?' selected':''}>Atitinka</option>
+                    <option value="Neatitinka"${s.vert==='Neatitinka'?' selected':''}>Neatitinka</option>
+                    <option value="Netaikomi"${s.vert==='Netaikomi'?' selected':''}>Netaikomi</option>
+                  </select>
+                </td>
+                <td>
+                  <select data-field="kitiVertinimas__${dataKey}" data-dalis="${safe}">
+                    <option value="">--</option>
+                    <option value="Atitinka"${s.kiti==='Atitinka'?' selected':''}>Atitinka</option>
+                    <option value="Neatitinka"${s.kiti==='Neatitinka'?' selected':''}>Neatitinka</option>
+                    <option value="Netaikomi"${s.kiti==='Netaikomi'?' selected':''}>Netaikomi</option>
+                  </select>
+                </td>
+                <td><textarea data-field="kvalifPastabos__${dataKey}" data-dalis="${safe}">${escapeHtml(s.pas)}</textarea></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+// Pertvarko sutarties nuostatų skyrių pagal dalis
+function restructureSutartiesBlock() {
+  const block = document.getElementById('sutarties-block');
+  if (!block) return;
+  const dalys = getCurrentDalys();
+
+  // Saugom existing values
+  const saved = {};
+  if (dalys) {
+    block.querySelectorAll('.sut-subblock').forEach(sub => {
+      const dn = sub.dataset.dalis;
+      saved[dn] = {
+        be: sub.querySelector('[data-field^="sutartiesBePvm__"]')?.value || '',
+        su: sub.querySelector('[data-field^="sutartiesSuPvm__"]')?.value || ''
+      };
+    });
+  }
+  const singleBe = document.getElementById('sutarties-be-pvm')?.value || '';
+  const singleSu = document.getElementById('sutarties-su-pvm')?.value || '';
+
+  const formNum = currentForm;
+
+  if (!dalys) {
+    // Single mode - restoring is handled by the field re-render in restructure
+    // But since the structure was rendered as part of section 7, let's keep it minimal: we re-render the price fields only
+    block.innerHTML = `
+      <div class="sut-single" style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+        <div class="field">
+          <label>Sutarties kaina be PVM (Eur)</label>
+          <input type="number" id="sutarties-be-pvm" data-field="sutartiesBePvm" step="0.01" oninput="calcPvm(this);" value="${escapeAttr(singleBe)}">
+        </div>
+        <div class="field">
+          <label>Sutarties kaina su PVM (Eur)</label>
+          <input type="number" id="sutarties-su-pvm" data-field="sutartiesSuPvm" step="0.01" oninput="calcPvm(this);" value="${escapeAttr(singleSu)}">
+          <div class="hint">Auto: ×1.21 (21% PVM)</div>
+        </div>
+      </div>
+    `;
+  } else {
+    block.innerHTML = dalys.map(d => {
+      const dn = d.name;
+      const s = saved[dn] || { be: '', su: '' };
+      const safe = escapeAttr(dn);
+      const dataKey = dn.replace(/[^a-zA-Z0-9_]/g, '_');
+      return `
+        <div class="sut-subblock" data-dalis="${safe}" style="margin-top:16px; padding:14px 16px; background:var(--color-green-5); border:1px solid var(--color-green-15); border-radius:8px;">
+          <h5 style="font-size:13px; margin:0 0 10px; color:var(--color-emerald-120); font-weight:700;">${d.idx} dalis. ${escapeHtml(dn)} — Sutarties kaina</h5>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+            <div class="field">
+              <label>Sutarties kaina be PVM (Eur)</label>
+              <input type="number" data-field="sutartiesBePvm__${dataKey}" data-dalis="${safe}" step="0.01" oninput="calcPvm(this);" value="${escapeAttr(s.be)}">
+            </div>
+            <div class="field">
+              <label>Sutarties kaina su PVM (Eur)</label>
+              <input type="number" data-field="sutartiesSuPvm__${dataKey}" data-dalis="${safe}" step="0.01" oninput="calcPvm(this);" value="${escapeAttr(s.su)}">
+              <div class="hint">Auto: ×1.21 (21% PVM)</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
 }
 
 // Patikrina, ar atskirų objekto dalių verčių suma atitinka bendrą pirkimo vertę
@@ -2270,13 +2771,24 @@ function gatherFormData() {
     timestamp: new Date().toISOString(),
     fields: {},
     radios: {},
-    rows: { pasiulymai: [], galutiniai: [], natSaug: [], dalys: [] }
+    rows: { pasiulymai: [], galutiniai: [], natSaug: [], dalys: [] },
+    perDalis: {} // per-dalis info: { dalisName: { kvalifTiekejas, kvalifVertinimas, kitiVertinimas, kvalifPastabos, galimasLaimetojas, sutartiesBePvm, sutartiesSuPvm } }
   };
 
-  // Įprasti įvedimo laukai (data-field)
+  // Įprasti įvedimo laukai (data-field) - ne lentelėse ir ne sub-blokuose
   document.querySelectorAll('[data-field]').forEach(el => {
     if (el.closest('tbody')) return; // Lentelės eilutes apdorosim atskirai
     const key = el.dataset.field;
+    // Per-dalis laukai (su __dataKey suffiksu) saugomi atskirai
+    if (key.includes('__')) {
+      const dalisAttr = el.dataset.dalis || '';
+      const [baseField] = key.split('__');
+      if (dalisAttr) {
+        if (!data.perDalis[dalisAttr]) data.perDalis[dalisAttr] = {};
+        data.perDalis[dalisAttr][baseField] = el.type === 'checkbox' ? el.checked : el.value;
+      }
+      return;
+    }
     if (el.type === 'checkbox') data.fields[key] = el.checked;
     else data.fields[key] = el.value;
   });
@@ -2286,18 +2798,49 @@ function gatherFormData() {
     data.radios[r.name] = r.value;
   });
 
-  // Rows
-  ['pasiulymu-tbody', 'galutiniai-tbody', 'natsaug-tbody', 'dalys-tbody'].forEach(tbodyId => {
-    const tbody = document.getElementById(tbodyId);
-    if (!tbody) return;
-    const key = tbodyId.replace('-tbody', '');
-    const targetKey = key === 'pasiulymu' ? 'pasiulymai' : (key === 'natsaug' ? 'natSaug' : key);
+  // Rows - dalys lieka senu būdu (ID-based)
+  const dalysTbody = document.getElementById('dalys-tbody');
+  if (dalysTbody) {
+    Array.from(dalysTbody.children).forEach(tr => {
+      const rowData = {};
+      tr.querySelectorAll('[data-field]').forEach(el => {
+        rowData[el.dataset.field] = el.type === 'checkbox' ? el.checked : el.value;
+      });
+      data.rows.dalys.push(rowData);
+    });
+  }
+  const natTbody = document.getElementById('natsaug-tbody');
+  if (natTbody) {
+    Array.from(natTbody.children).forEach(tr => {
+      const rowData = {};
+      tr.querySelectorAll('[data-field]').forEach(el => {
+        rowData[el.dataset.field] = el.type === 'checkbox' ? el.checked : el.value;
+      });
+      data.rows.natSaug.push(rowData);
+    });
+  }
+
+  // Pasiūlymai ir galutiniai pasiūlymai - iš visų sub-lentelių (class-based)
+  document.querySelectorAll('.pasiulymu-tbody').forEach(tbody => {
+    const tbodyDalis = tbody.dataset.dalis || '';
     Array.from(tbody.children).forEach(tr => {
       const rowData = {};
       tr.querySelectorAll('[data-field]').forEach(el => {
         rowData[el.dataset.field] = el.type === 'checkbox' ? el.checked : el.value;
       });
-      data.rows[targetKey].push(rowData);
+      if (!rowData.dalis && tbodyDalis) rowData.dalis = tbodyDalis;
+      data.rows.pasiulymai.push(rowData);
+    });
+  });
+  document.querySelectorAll('.galutiniai-tbody').forEach(tbody => {
+    const tbodyDalis = tbody.dataset.dalis || '';
+    Array.from(tbody.children).forEach(tr => {
+      const rowData = {};
+      tr.querySelectorAll('[data-field]').forEach(el => {
+        rowData[el.dataset.field] = el.type === 'checkbox' ? el.checked : el.value;
+      });
+      if (!rowData.dalis && tbodyDalis) rowData.dalis = tbodyDalis;
+      data.rows.galutiniai.push(rowData);
     });
   });
 
@@ -2323,8 +2866,7 @@ function loadFormData(data) {
       if (radio.onchange) radio.onchange();
     }
   });
-  // Rows - dalys (objekto dalys) reikia užkrauti pirma, kad dalis dropdown'ai
-  // pasiūlymų lentelėje turėtų teisingas opcijas
+  // Rows - dalys reikia užkrauti pirma, kad sub-blokai būtų sukurti
   if (data.rows) {
     if (data.rows.dalys) {
       data.rows.dalys.forEach(rowData => {
@@ -2337,30 +2879,19 @@ function loadFormData(data) {
           if (el) el.value = rowData[k] || '';
         });
       });
-      // Atnaujinam dropdown'us pasiūlymuose pagal įkeltas dalis
-      refreshDalisOptionsInOffers();
+      // Pertvarkom sub-blokus pagal įkeltas dalis
+      onDalisChange();
     }
     if (data.rows.pasiulymai) {
       data.rows.pasiulymai.forEach(rowData => {
-        addPasiulymasRow();
-        const tbody = document.getElementById('pasiulymu-tbody');
-        const tr = tbody.lastElementChild;
-        Object.keys(rowData).forEach(k => {
-          const el = tr.querySelector(`[data-field="${k}"]`);
-          if (el) el.value = rowData[k] || '';
-        });
+        const forDalis = rowData.dalis || undefined;
+        populatePasiulymasFromData(rowData, forDalis);
       });
     }
     if (data.rows.galutiniai) {
       data.rows.galutiniai.forEach(rowData => {
-        addGalutinisRow();
-        const tbody = document.getElementById('galutiniai-tbody');
-        if (!tbody) return;
-        const tr = tbody.lastElementChild;
-        Object.keys(rowData).forEach(k => {
-          const el = tr.querySelector(`[data-field="${k}"]`);
-          if (el) el.value = rowData[k] || '';
-        });
+        const forDalis = rowData.dalis || undefined;
+        populateGalutiniaiFromData(rowData, forDalis);
       });
     }
     if (data.rows.natSaug) {
@@ -2375,9 +2906,23 @@ function loadFormData(data) {
         });
       });
     }
-    // Galutinis perskaičiavimas po įkėlimo
-    onDalisChange();
   }
+  // Per-dalis duomenys (kvalif, sutarties kaina)
+  if (data.perDalis) {
+    Object.keys(data.perDalis).forEach(dalisName => {
+      const dataKey = dalisName.replace(/[^a-zA-Z0-9_]/g, '_');
+      const perDalisData = data.perDalis[dalisName];
+      Object.keys(perDalisData).forEach(baseField => {
+        const el = document.querySelector(`[data-field="${baseField}__${dataKey}"]`);
+        if (el) {
+          if (el.type === 'checkbox') el.checked = !!perDalisData[baseField];
+          else el.value = perDalisData[baseField] || '';
+        }
+      });
+    });
+  }
+  // Galutinis perskaičiavimas po įkėlimo
+  validateDalysVerte();
   // Trigger conditional toggles
   ['pirkimo-budas'].forEach(id => {
     const el = document.getElementById(id);
@@ -2662,7 +3207,16 @@ function buildPreviewHtml(data) {
   // Section 7
   html += `<tr><td colspan="4" class="section-title">7. Sutarties nuostatos</td></tr>`;
   html += `<tr><td colspan="4">`;
-  html += `<strong>Sutarties kaina:</strong> ${escapeHtml(formatEurNum(f.sutartiesBePvm))} Eur be PVM, t. y. ${escapeHtml(formatEurNum(f.sutartiesSuPvm))} Eur su PVM.<br>`;
+  if (isSkaidoma && data.perDalis) {
+    // Per dalis sutarties kainos
+    (data.rows.dalys || []).forEach((d, idx) => {
+      const dn = d.dalisPav || `${idx+1} dalis`;
+      const perD = data.perDalis[dn] || {};
+      html += `<strong>${idx+1} dalis. ${escapeHtml(dn)} — Sutarties kaina:</strong> ${escapeHtml(formatEurNum(perD.sutartiesBePvm))} Eur be PVM, t. y. ${escapeHtml(formatEurNum(perD.sutartiesSuPvm))} Eur su PVM.<br>`;
+    });
+  } else {
+    html += `<strong>Sutarties kaina:</strong> ${escapeHtml(formatEurNum(f.sutartiesBePvm))} Eur be PVM, t. y. ${escapeHtml(formatEurNum(f.sutartiesSuPvm))} Eur su PVM.<br>`;
+  }
   if (formNum === 2) {
     if (r.kainosTipas === 'specialios') html += `☒ Lygi sumai, nurodytai Sutarties Specialiosiose sąlygose.<br>`;
     else if (r.kainosTipas === 'kita') html += `☒ Kita: ${escapeHtml(f.kainosKita || '')}<br>`;
@@ -3163,17 +3717,35 @@ async function buildDocx(data) {
     }
 
     // ===== Form 2: Galimo laimėtojo kvalifikacija =====
-    if (formNum === 2 && f.kvalifTiekejas) {
-      const kv = f.kvalifVertinimas;
-      const ki = f.kitiVertinimas;
-      rows.push(new TableRow({
-        children: [cell([
-          par([txt('Galimu laimėtoju pripažintinas:', { bold: true }), txt(' ' + (f.galimasLaimetojas || '____'))]),
-          par([txt('Informacija apie galimo laimėtojo pašalinimo pagrindų nebuvimo, kvalifikacijos ir kitų dokumentų vertinimo rezultatus:',
-            { bold: true })]),
-          par([txt(`Tiekėjas: ${f.kvalifTiekejas} | Kvalifikacija: ${kv || '__'} | Kiti reikalavimai: ${ki || '__'} | Pastabos: ${f.kvalifPastabos || '-'}`)])
-        ], { colSpan: 4 })]
-      }));
+    if (formNum === 2) {
+      if (isSkaidoma && data.perDalis) {
+        // Per-dalis kvalifikacijos vertinimas
+        (data.rows.dalys || []).forEach((d, idx) => {
+          const dn = d.dalisPav || `${idx+1} dalis`;
+          const perD = data.perDalis[dn] || {};
+          if (!perD.galimasLaimetojas && !perD.kvalifTiekejas) return;
+          rows.push(new TableRow({
+            children: [cell([
+              par([txt(`${idx+1} dalis. ${dn}`, { bold: true, italics: true })]),
+              par([txt('Galimu laimėtoju pripažintinas: ', { bold: true }), txt(perD.galimasLaimetojas || perD.kvalifTiekejas || '____')]),
+              par([txt('Informacija apie galimo laimėtojo pašalinimo pagrindų nebuvimo, kvalifikacijos ir kitų dokumentų vertinimo rezultatus:',
+                { bold: true })]),
+              par([txt(`Tiekėjas: ${perD.kvalifTiekejas || '____'} | Kvalifikacija: ${perD.kvalifVertinimas || '__'} | Kiti reikalavimai: ${perD.kitiVertinimas || '__'} | Pastabos: ${perD.kvalifPastabos || '-'}`)])
+            ], { colSpan: 4 })]
+          }));
+        });
+      } else if (f.kvalifTiekejas || f.galimasLaimetojas) {
+        const kv = f.kvalifVertinimas;
+        const ki = f.kitiVertinimas;
+        rows.push(new TableRow({
+          children: [cell([
+            par([txt('Galimu laimėtoju pripažintinas:', { bold: true }), txt(' ' + (f.galimasLaimetojas || f.kvalifTiekejas || '____'))]),
+            par([txt('Informacija apie galimo laimėtojo pašalinimo pagrindų nebuvimo, kvalifikacijos ir kitų dokumentų vertinimo rezultatus:',
+              { bold: true })]),
+            par([txt(`Tiekėjas: ${f.kvalifTiekejas || '____'} | Kvalifikacija: ${kv || '__'} | Kiti reikalavimai: ${ki || '__'} | Pastabos: ${f.kvalifPastabos || '-'}`)])
+          ], { colSpan: 4 })]
+        }));
+      }
     }
 
     // ===== Section 5 =====
@@ -3205,10 +3777,22 @@ async function buildDocx(data) {
     // ===== Section 7 =====
     rows.push(sectionTitleRow('7. SUTARTIES NUOSTATOS'));
     const s7Children = [];
-    s7Children.push(par([
-      txt('Sutarties kaina: ', { bold: true }),
-      txt(`${formatEurNum(f.sutartiesBePvm)} Eur be PVM, t. y. ${formatEurNum(f.sutartiesSuPvm)} Eur su PVM.`)
-    ]));
+    if (isSkaidoma && data.perDalis) {
+      // Per-dalis sutarties kainos
+      (data.rows.dalys || []).forEach((d, idx) => {
+        const dn = d.dalisPav || `${idx+1} dalis`;
+        const perD = data.perDalis[dn] || {};
+        s7Children.push(par([
+          txt(`${idx+1} dalis. ${dn} — Sutarties kaina: `, { bold: true }),
+          txt(`${formatEurNum(perD.sutartiesBePvm)} Eur be PVM, t. y. ${formatEurNum(perD.sutartiesSuPvm)} Eur su PVM.`)
+        ]));
+      });
+    } else {
+      s7Children.push(par([
+        txt('Sutarties kaina: ', { bold: true }),
+        txt(`${formatEurNum(f.sutartiesBePvm)} Eur be PVM, t. y. ${formatEurNum(f.sutartiesSuPvm)} Eur su PVM.`)
+      ]));
+    }
     if (formNum === 2) {
       if (r.kainosTipas === 'specialios') s7Children.push(par([txt('☒ lygi sumai, nurodytai Sutarties Specialiosiose sąlygose.')]));
       else if (r.kainosTipas === 'kita') s7Children.push(par([txt('☒ kita: ' + (f.kainosKita || ''))]));
