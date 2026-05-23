@@ -1866,7 +1866,8 @@ function addGalutinisRow(forDalis) {
   renumberAllGalutiniai();
 }
 
-// Pažymėjus "nepateikė galutinio" - perimam kainas iš pirminio pasiūlymo lentelės pagal tiekėjo pavadinimą
+// Pažymėjus "nepateikė galutinio" - perimam kainas iš pirminio pasiūlymo eilutės
+// Susiejimas - pirma per linkedId, fallback pagal tiekėjo pavadinimą per visas sub-lenteles
 function toggleNepateikGalutinio(checkbox) {
   const tr = checkbox.closest('tr');
   if (!tr) return;
@@ -1875,22 +1876,32 @@ function toggleNepateikGalutinio(checkbox) {
   const suField = tr.querySelector('[data-field="galKainaSuPvm"]');
 
   if (checkbox.checked) {
-    // Bandom rasti atitinkamą tiekėją 1 lentelėje ir perimti kainas
-    const tiekejasName = (tiekejasInput?.value || '').trim().toLowerCase();
-    if (tiekejasName) {
-      const pasTbody = document.getElementById('pasiulymu-tbody');
-      if (pasTbody) {
-        for (const pasTr of pasTbody.children) {
-          const pasName = (pasTr.querySelector('[data-field="tiekejas"]')?.value || '').trim().toLowerCase();
-          if (pasName === tiekejasName) {
-            const pasBe = pasTr.querySelector('[data-field="kainaBePvm"]')?.value || '';
-            const pasSu = pasTr.querySelector('[data-field="kainaSuPvm"]')?.value || '';
-            if (beField) beField.value = pasBe;
-            if (suField) suField.value = pasSu;
-            break;
-          }
-        }
+    let pasTr = null;
+    // 1) Bandymas per linkedId (patikimiausias būdas)
+    const linkedId = tr.dataset.linkedId || '';
+    if (linkedId) {
+      pasTr = document.querySelector(`.pasiulymu-tbody tr[data-id="${linkedId}"]`);
+    }
+    // 2) Fallback - pagal tiekėjo pavadinimą per visas pasiūlymų sub-lenteles
+    if (!pasTr) {
+      const tiekejasName = (tiekejasInput?.value || '').trim().toLowerCase();
+      if (tiekejasName) {
+        document.querySelectorAll('.pasiulymu-tbody tr').forEach(t => {
+          if (pasTr) return;
+          const pasName = (t.querySelector('[data-field="tiekejas"]')?.value || '').trim().toLowerCase();
+          if (pasName === tiekejasName) pasTr = t;
+        });
       }
+    }
+    if (pasTr) {
+      const pasBe = pasTr.querySelector('[data-field="kainaBePvm"]')?.value || '';
+      const pasSu = pasTr.querySelector('[data-field="kainaSuPvm"]')?.value || '';
+      if (beField) beField.value = pasBe;
+      if (suField) suField.value = pasSu;
+      // Taip pat perimam pasiūlymo vertinimą (jei galutinio vertinimas dar tuščias)
+      const pasVert = pasTr.querySelector('[data-field="pasiulVert"]')?.value || '';
+      const galVertEl = tr.querySelector('[data-field="galVert"]');
+      if (galVertEl && !galVertEl.value && pasVert) galVertEl.value = pasVert;
     }
     // Užtemdom kainos laukus, kad būtų aišku, jog automatiškai paimta
     if (beField) { beField.readOnly = true; beField.style.background = '#f3f4f6'; }
@@ -1899,6 +1910,11 @@ function toggleNepateikGalutinio(checkbox) {
     if (beField) { beField.readOnly = false; beField.style.background = ''; }
     if (suField) { suField.readOnly = false; suField.style.background = ''; }
   }
+
+  // Po pakeitimo - perskaičiuojam laimėtojus ir auto-fill'us
+  autoFillGalimasLaimetojas();
+  autoFillSutartiesKaina();
+  autoFillSprendimai();
 }
 
 // Kai įrašomas tiekėjo pavadinimas - jei "nepateikė galutinio" pažymėtas, perimti naujas kainas
@@ -1918,19 +1934,26 @@ function onPasiulymasTiekejasChange(input) {
 function onPasiulymasPriceChange(input) {
   const tr = input.closest('tr');
   if (!tr) return;
-  const tiekejasName = (tr.querySelector('[data-field="tiekejas"]')?.value || '').trim().toLowerCase();
-  if (!tiekejasName) return;
-  // Surandam galutinių lentelėje tą patį tiekėją - jei pažymėtas "nepateikė", atnaujinam kainas
-  const galTbody = document.getElementById('galutiniai-tbody');
-  if (!galTbody) return;
-  for (const galTr of galTbody.children) {
-    const galName = (galTr.querySelector('[data-field="tiekejas"]')?.value || '').trim().toLowerCase();
-    if (galName === tiekejasName) {
-      const cb = galTr.querySelector('[data-field="nepateikGalutinio"]');
-      if (cb && cb.checked) {
-        toggleNepateikGalutinio(cb);
-      }
+  const pasId = tr.dataset.id || '';
+  // 1) Bandom per linkedId surasti galutinę eilutę
+  let galTr = null;
+  if (pasId) {
+    galTr = document.querySelector(`.galutiniai-tbody tr[data-linked-id="${pasId}"]`);
+  }
+  // 2) Fallback - pagal tiekėjo pavadinimą per visas sub-lenteles
+  if (!galTr) {
+    const tiekejasName = (tr.querySelector('[data-field="tiekejas"]')?.value || '').trim().toLowerCase();
+    if (tiekejasName) {
+      document.querySelectorAll('.galutiniai-tbody tr').forEach(t => {
+        if (galTr) return;
+        const galName = (t.querySelector('[data-field="tiekejas"]')?.value || '').trim().toLowerCase();
+        if (galName === tiekejasName) galTr = t;
+      });
     }
+  }
+  if (galTr) {
+    const cb = galTr.querySelector('[data-field="nepateikGalutinio"]');
+    if (cb && cb.checked) toggleNepateikGalutinio(cb);
   }
   autoFillSprendimai();
 }
@@ -3922,52 +3945,81 @@ function generateNotificationList(data) {
   const r = data.radios || {};
   const scen = f.sprendimoScenarijus;
   const isDeryb = r.derybos === 'Vykdomos';
+  const isSkaidoma = data.formNum === 2 && r.skaidoma === 'taip' && (data.rows.dalys || []).length > 0;
   const sourceRows = isDeryb ? (data.rows.galutiniai || []) : (data.rows.pasiulymai || []);
   const vertField = isDeryb ? 'galVert' : 'pasiulVert';
-  const winnerName = (f.laimetojas || '').trim().toLowerCase();
+  const beField = isDeryb ? 'galKainaBePvm' : 'kainaBePvm';
 
   const notifications = [];
+
+  // Pagalbinė: surenka laimėtojų vardus per dalis (arba bendrą laimėtoją jei neskaidoma)
+  function winnersByDalis() {
+    if (!isSkaidoma) {
+      return { '': (f.laimetojas || '').trim().toLowerCase() };
+    }
+    const result = {};
+    (data.rows.dalys || []).forEach((d, idx) => {
+      const dn = d.dalisPav || `${idx+1} dalis`;
+      // Surandam pigiausią Atitinka šios dalies tiekėją
+      const items = sourceRows
+        .filter(rw => (rw.dalis || '').trim() === dn && rw[vertField] === 'Atitinka' && !isNaN(parseFloat(rw[beField])))
+        .map(rw => ({ name: (rw.tiekejas || '').trim(), price: parseFloat(rw[beField]) }))
+        .sort((a, b) => a.price - b.price);
+      const perDalisWinner = (data.perDalis && data.perDalis[dn] && data.perDalis[dn].galimasLaimetojas)
+        ? data.perDalis[dn].galimasLaimetojas.toLowerCase()
+        : (items[0]?.name || '').toLowerCase();
+      result[dn] = perDalisWinner;
+    });
+    return result;
+  }
+  const winnerMap = winnersByDalis();
+
+  function pushNotif(name, type, dalisName, row) {
+    const dalisLabel = dalisName ? `_${sanitizeFilename(dalisName)}` : '';
+    notifications.push({
+      recipient: name,
+      type,
+      dalis: dalisName || '',
+      neatitikimas: (row && (row.neatitikimas || row.galNeatitikimas)) || '',
+      filename: `Pranesimas_${sanitizeFilename(name)}${dalisLabel}_${type}.docx`
+    });
+  }
 
   if (scen === 'sutartis' || scen === 'vienas-tiekejas') {
     sourceRows.forEach(row => {
       const name = (row.tiekejas || '').trim();
       if (!name) return;
       const vert = row[vertField] || '';
+      const dalisName = isSkaidoma ? (row.dalis || '').trim() : '';
       let type;
       if (vert === 'Atitinka') {
-        type = (name.toLowerCase() === winnerName) ? 'winner' : 'lost_atitinka';
+        const w = winnerMap[dalisName] || '';
+        type = (name.toLowerCase() === w) ? 'winner' : 'lost_atitinka';
       } else if (vert === 'Neatitinka') {
         type = 'rejected';
       } else {
-        return; // be vertinimo - praleisti
+        return;
       }
-      notifications.push({
-        recipient: name,
-        type,
-        neatitikimas: row.neatitikimas || row.galNeatitikimas || '',
-        filename: `Pranesimas_${sanitizeFilename(name)}_${type}.docx`
-      });
+      pushNotif(name, type, dalisName, row);
     });
   } else if (scen === 'atmesta') {
     sourceRows.forEach(row => {
       const name = (row.tiekejas || '').trim();
       if (!name) return;
-      notifications.push({
-        recipient: name,
-        type: 'all_rejected',
-        neatitikimas: row.neatitikimas || row.galNeatitikimas || '',
-        filename: `Pranesimas_${sanitizeFilename(name)}_atmesta.docx`
-      });
+      const dalisName = isSkaidoma ? (row.dalis || '').trim() : '';
+      pushNotif(name, 'all_rejected', dalisName, row);
     });
   } else if (scen === 'nutraukta') {
+    // Susiejimas tik pagal tiekėją - vienas pranešimas vienam tiekėjui per dalį
+    const seen = new Set();
     sourceRows.forEach(row => {
       const name = (row.tiekejas || '').trim();
       if (!name) return;
-      notifications.push({
-        recipient: name,
-        type: 'terminated',
-        filename: `Pranesimas_${sanitizeFilename(name)}_nutraukta.docx`
-      });
+      const dalisName = isSkaidoma ? (row.dalis || '').trim() : '';
+      const key = name + '|' + dalisName;
+      if (seen.has(key)) return;
+      seen.add(key);
+      pushNotif(name, 'terminated', dalisName, row);
     });
   }
 
@@ -3979,66 +4031,102 @@ function buildNotificationParagraphs(data, notif) {
   const { Paragraph, TextRun, AlignmentType, HeadingLevel } = docx;
   const f = data.fields;
   const r = data.radios || {};
-  const winnerName = f.laimetojas || '____';
   const pavadinimas = f.pirkimoPavadinimas || '____';
+  const dalisName = notif.dalis || '';
+  const dalisFraza = dalisName ? ` pirkimo objekto dalies "${dalisName}"` : '';
+  const dalisFrazaPrep = dalisName ? `dėl pirkimo objekto dalies "${dalisName}"` : '';
+
+  // Konkretus laimėtojas/eilė/kaina priklauso nuo dalies
+  let winnerName = f.laimetojas || '____';
+  let pasiulymuEile = f.pasiulymuEile || '';
+  let sutBePvm = f.sutartiesBePvm || '';
+  let sutSuPvm = f.sutartiesSuPvm || '';
+  if (dalisName && data.perDalis && data.perDalis[dalisName]) {
+    const perD = data.perDalis[dalisName];
+    if (perD.galimasLaimetojas) winnerName = perD.galimasLaimetojas;
+    if (perD.sutartiesBePvm) sutBePvm = perD.sutartiesBePvm;
+    if (perD.sutartiesSuPvm) sutSuPvm = perD.sutartiesSuPvm;
+    // Filtrais eilę per dalis - šitos dalies tiekėjai pagal kainą
+    const isDeryb = r.derybos === 'Vykdomos';
+    const sourceRows = isDeryb ? (data.rows.galutiniai || []) : (data.rows.pasiulymai || []);
+    const vertField = isDeryb ? 'galVert' : 'pasiulVert';
+    const beField = isDeryb ? 'galKainaBePvm' : 'kainaBePvm';
+    const partItems = sourceRows
+      .filter(rw => (rw.dalis || '').trim() === dalisName && rw[vertField] === 'Atitinka' && !isNaN(parseFloat(rw[beField])))
+      .map(rw => ({ name: (rw.tiekejas || '').trim(), price: parseFloat(rw[beField]) }))
+      .sort((a, b) => a.price - b.price);
+    if (partItems.length > 1) {
+      pasiulymuEile = partItems.map((it, i) => `${i+1}. ${it.name} - ${formatEurNum(it.price)} Eur be PVM`).join('\n');
+    } else {
+      pasiulymuEile = '';
+    }
+  }
 
   // Teisinis pagrindas pranešime - LITGRID Mažos vertės pirkimų vykdymo tvarkos aprašo punktas
-  // Skelbiamai apklausai - 30.20 p., Neskelbiamai apklausai - 31.9 p.
   const pirkimoBudas = (f.pirkimoBudas || '').toLowerCase();
   const isSkelbiama = pirkimoBudas.includes('skelbiama') && !pirkimoBudas.includes('neskelbiama');
   const aprasoPunktas = isSkelbiama ? '30.20 punktu' : '31.9 punktu';
 
-  const intro = `Vadovaujantis LITGRID AB mažos vertės pirkimų vykdymo tvarkos aprašo ${aprasoPunktas}, informuojame, kad pirkimo "${pavadinimas}" (toliau – Pirkimas) procedūros baigtos.`;
+  const introBase = `Vadovaujantis LITGRID AB mažos vertės pirkimų vykdymo tvarkos aprašo ${aprasoPunktas}, informuojame, kad pirkimo "${pavadinimas}"`;
+  const intro = dalisName
+    ? `${introBase}${dalisFraza} (toliau – Pirkimas) procedūros baigtos.`
+    : `${introBase} (toliau – Pirkimas) procedūros baigtos.`;
   const apeliac = 'Informuojame, kad teisės aktų nustatyta tvarka turite teisę pareikšti pretenziją Perkančiajam subjektui, vadovaujantis Lietuvos Respublikos pirkimų, atliekamų vandentvarkos, energetikos, transporto ar pašto paslaugų srities perkančiųjų subjektų, įstatymo 109 straipsniu.';
 
   const paragraphs = [];
   paragraphs.push(par([txt(intro)]));
+  if (dalisName) {
+    paragraphs.push(par([
+      txt('Pirkimo objekto dalis: ', { bold: true }),
+      txt(dalisName + '.')
+    ]));
+  }
   paragraphs.push(par([txt('Pirkimo rezultatai:', { bold: true })]));
 
   if (notif.type === 'winner') {
-    paragraphs.push(par([txt('1. Jūsų pateiktas pasiūlymas pripažintas atitinkančiu Pirkimo sąlygų reikalavimus.')]));
-    if (f.pasiulymuEile && f.pasiulymuEile.includes('\n')) {
+    paragraphs.push(par([txt(`1. Jūsų pateiktas pasiūlymas${dalisName ? ' ' + dalisFrazaPrep : ''} pripažintas atitinkančiu Pirkimo sąlygų reikalavimus.`)]));
+    if (pasiulymuEile && pasiulymuEile.includes('\n')) {
       paragraphs.push(par([txt('2. Nustatyta pasiūlymų eilė ekonominio naudingumo mažėjimo tvarka:')]));
-      f.pasiulymuEile.split('\n').forEach(line => {
+      pasiulymuEile.split('\n').forEach(line => {
         const t = line.trim();
         if (t) paragraphs.push(par([txt('\t' + t)]));
       });
-      paragraphs.push(par([txt('3. Jūsų pateiktas pasiūlymas pripažintas laimėjusiu. Su Jumis bus sudaroma pirkimo sutartis.')]));
-      if (f.sutartiesBePvm) {
-        paragraphs.push(par([txt(`4. Numatoma sutarties kaina: ${formatEurNum(f.sutartiesBePvm)} Eur be PVM (${formatEurNum(f.sutartiesSuPvm)} Eur su PVM).`)]));
+      paragraphs.push(par([txt(`3. Jūsų pateiktas pasiūlymas pripažintas laimėjusiu. Su Jumis bus sudaroma pirkimo sutartis${dalisName ? ' ' + dalisFrazaPrep : ''}.`)]));
+      if (sutBePvm) {
+        paragraphs.push(par([txt(`4. Numatoma sutarties kaina: ${formatEurNum(sutBePvm)} Eur be PVM (${formatEurNum(sutSuPvm)} Eur su PVM).`)]));
       }
     } else {
-      paragraphs.push(par([txt('2. Jūsų pateiktas pasiūlymas pripažintas laimėjusiu. Su Jumis bus sudaroma pirkimo sutartis.')]));
-      if (f.sutartiesBePvm) {
-        paragraphs.push(par([txt(`3. Numatoma sutarties kaina: ${formatEurNum(f.sutartiesBePvm)} Eur be PVM (${formatEurNum(f.sutartiesSuPvm)} Eur su PVM).`)]));
+      paragraphs.push(par([txt(`2. Jūsų pateiktas pasiūlymas pripažintas laimėjusiu. Su Jumis bus sudaroma pirkimo sutartis${dalisName ? ' ' + dalisFrazaPrep : ''}.`)]));
+      if (sutBePvm) {
+        paragraphs.push(par([txt(`3. Numatoma sutarties kaina: ${formatEurNum(sutBePvm)} Eur be PVM (${formatEurNum(sutSuPvm)} Eur su PVM).`)]));
       }
     }
     paragraphs.push(par([txt('Atkreipiame dėmesį, kad sutarties sudarymo atidėjimo terminas šiam pirkimui nėra taikomas. Su Jumis netrukus susisieksime dėl sutarties sudarymo sąlygų.')]));
   } else if (notif.type === 'lost_atitinka') {
-    paragraphs.push(par([txt('1. Jūsų pateiktas pasiūlymas pripažintas atitinkančiu Pirkimo sąlygų reikalavimus.')]));
-    if (f.pasiulymuEile && f.pasiulymuEile.includes('\n')) {
+    paragraphs.push(par([txt(`1. Jūsų pateiktas pasiūlymas${dalisName ? ' ' + dalisFrazaPrep : ''} pripažintas atitinkančiu Pirkimo sąlygų reikalavimus.`)]));
+    if (pasiulymuEile && pasiulymuEile.includes('\n')) {
       paragraphs.push(par([txt('2. Nustatyta pasiūlymų eilė ekonominio naudingumo mažėjimo tvarka:')]));
-      f.pasiulymuEile.split('\n').forEach(line => {
+      pasiulymuEile.split('\n').forEach(line => {
         const t = line.trim();
         if (t) paragraphs.push(par([txt('\t' + t)]));
       });
-      paragraphs.push(par([txt(`3. Laimėjusiu pripažintas ${winnerName} pasiūlymas. Su laimėjusiu tiekėju bus sudaroma pirkimo sutartis.`)]));
+      paragraphs.push(par([txt(`3. Laimėjusiu pripažintas ${winnerName} pasiūlymas. Su laimėjusiu tiekėju bus sudaroma pirkimo sutartis${dalisName ? ' ' + dalisFrazaPrep : ''}.`)]));
     } else {
-      paragraphs.push(par([txt(`2. Laimėjusiu pripažintas ${winnerName} pasiūlymas. Su laimėjusiu tiekėju bus sudaroma pirkimo sutartis.`)]));
+      paragraphs.push(par([txt(`2. Laimėjusiu pripažintas ${winnerName} pasiūlymas. Su laimėjusiu tiekėju bus sudaroma pirkimo sutartis${dalisName ? ' ' + dalisFrazaPrep : ''}.`)]));
     }
     paragraphs.push(par([txt('Dėkojame už dalyvavimą Pirkime.')]));
   } else if (notif.type === 'rejected') {
-    paragraphs.push(par([txt('1. Jūsų pateiktas pasiūlymas pripažintas neatitinkančiu Pirkimo sąlygų reikalavimų. Pasiūlymo atmetimo priežastys:')]));
+    paragraphs.push(par([txt(`1. Jūsų pateiktas pasiūlymas${dalisName ? ' ' + dalisFrazaPrep : ''} pripažintas neatitinkančiu Pirkimo sąlygų reikalavimų. Pasiūlymo atmetimo priežastys:`)]));
     paragraphs.push(par([txt('\t' + (notif.neatitikimas || '[neatitikimo aprašymas]'))]));
     paragraphs.push(par([txt('2. Vadovaujantis Aprašu / Pirkimo sąlygomis, Jūsų pateiktas pasiūlymas atmestas.')]));
-    paragraphs.push(par([txt(`3. Laimėjusiu pripažintas ${winnerName} pasiūlymas. Su laimėjusiu tiekėju bus sudaroma pirkimo sutartis.`)]));
+    paragraphs.push(par([txt(`3. Laimėjusiu pripažintas ${winnerName} pasiūlymas. Su laimėjusiu tiekėju bus sudaroma pirkimo sutartis${dalisName ? ' ' + dalisFrazaPrep : ''}.`)]));
   } else if (notif.type === 'all_rejected') {
-    paragraphs.push(par([txt('1. Jūsų pateiktas pasiūlymas pripažintas neatitinkančiu Pirkimo sąlygų reikalavimų. Pasiūlymo atmetimo priežastys:')]));
+    paragraphs.push(par([txt(`1. Jūsų pateiktas pasiūlymas${dalisName ? ' ' + dalisFrazaPrep : ''} pripažintas neatitinkančiu Pirkimo sąlygų reikalavimų. Pasiūlymo atmetimo priežastys:`)]));
     paragraphs.push(par([txt('\t' + (notif.neatitikimas || '[neatitikimo aprašymas]'))]));
     paragraphs.push(par([txt('2. Vadovaujantis Aprašu / Pirkimo sąlygomis, Jūsų pateiktas pasiūlymas atmestas.')]));
-    paragraphs.push(par([txt('3. Atsižvelgiant į tai, kad visi pateikti pasiūlymai buvo atmesti, Pirkimas baigtas nesudarant sutarties (vadovaujantis Įstatymo 41 str. 2 d. 2 p.).')]));
+    paragraphs.push(par([txt(`3. Atsižvelgiant į tai, kad visi pateikti pasiūlymai${dalisName ? ' ' + dalisFrazaPrep : ''} buvo atmesti, Pirkimas baigtas nesudarant sutarties (vadovaujantis Įstatymo 41 str. 2 d. 2 p.).`)]));
   } else if (notif.type === 'terminated') {
-    paragraphs.push(par([txt(`1. Pirkimo procedūros nutrauktos. Nutraukimo priežastys: ${f.nutraukimoPriezastis || '____'}.`)]));
+    paragraphs.push(par([txt(`1. Pirkimo${dalisName ? ' ' + dalisFrazaPrep : ''} procedūros nutrauktos. Nutraukimo priežastys: ${f.nutraukimoPriezastis || '____'}.`)]));
     paragraphs.push(par([txt('2. Vadovaujantis Įstatymo 41 str. 2 d. 3 p., Pirkimas laikomas pasibaigusiu.')]));
     paragraphs.push(par([txt('Dėkojame už dalyvavimą Pirkime.')]));
   }
